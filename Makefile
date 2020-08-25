@@ -1,5 +1,5 @@
 CC := g++
-COMMON_FLAGS := -std=c++14 -Wall -Wextra -Werror -Wpedantic -Wno-unused-local-typedefs -fopenmp -larmadillo -lmlpack
+COMMON_FLAGS := -std=c++14 -Wall -Wextra -Werror -Wpedantic -Wno-unused-local-typedefs -fopenmp -fuse-ld=gold -larmadillo -lmlpack
 
 DEBUG_FLAGS := -Og -g -fsanitize=address -fno-omit-frame-pointer
 RELEASE_FLAGS := -O3 -march=native -flto -fomit-frame-pointer -D NDEBUG

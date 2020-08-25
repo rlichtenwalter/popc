@@ -2,10 +2,8 @@
 #define POPC_DATASET_HPP
 
 #include <iostream>
-#include <locale>
 #include <string>
 #include <vector>
-#include "delimiter_ctype.hpp"
 
 namespace popc {
 	class dataset {
@@ -34,18 +32,20 @@ namespace popc {
 	};
 
 	dataset::dataset( std::istream & is, char delimiter ) : _num_instances() {
-		// the pointer below is managed via the library interface
-		is.imbue( std::locale( is.getloc(), new delimiter_ctype( delimiter ) ) );
-
 		// read header line with attribute names
 		std::string name;
-		while( is.good() && is.peek() != '\n' ) {
-			is >> name;
-			_names.push_back( name );
-		}
-		if( is.get() != '\n' ) {
-			std::cerr << "error: missing required newline after header\n";
-			exit( 2 );
+		while( !is.eof() ) {
+			char c = is.get();
+			if( c == delimiter ) {
+				_names.emplace_back( name );
+				name.clear();
+			} else if( c == '\n' ) {
+				_names.emplace_back( name );
+				break;
+			} else {
+				name.push_back( c );
+			}
+			is.peek();
 		}
 
 		// read data matrix
