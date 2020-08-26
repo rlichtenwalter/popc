@@ -13,7 +13,7 @@
 #include <string>
 #include <vector>
 #include <mlpack/methods/kmeans/kmeans.hpp>
-#include <mlpack/methods/kmeans/elkan_kmeans.hpp>
+#include <mlpack/methods/kmeans/hamerly_kmeans.hpp>
 #include "../include/cluster.hpp"
 #include "../include/dataset.hpp"
 #include "../include/popc.hpp"
@@ -50,7 +50,7 @@ void usage( char const * program ) {
 	std::cerr << "values separated by tab, or CHAR, if specified. Data must be preceded by a      \n";
 	std::cerr << "single-line header naming the columns Output takes the form of a single integer \n";
 	std::cerr << "cluster assignment per line, where each line corresponds to the data row of the \n";
-	std::cerr << "input.
+	std::cerr << "input.                                                                          \n";
 	std::cerr << "                                                                                \n";
 	std::cerr << "  -t, --delimiter=CHAR      use CHAR for field separator                        \n";
 	std::cerr << "                            defaults to TAB if not provided                     \n";
@@ -182,7 +182,7 @@ int main( int argc, char* argv[] ) {
 			mlpack::metric::EuclideanDistance,
 			mlpack::kmeans::SampleInitialization,
 			mlpack::kmeans::MaxVarianceNewCluster,
-			mlpack::kmeans::ElkanKMeans,
+			mlpack::kmeans::HamerlyKMeans,
 			Matrix>;
 	
 	KMeans clusterer;
