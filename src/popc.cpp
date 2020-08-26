@@ -18,7 +18,7 @@
 #include "../include/dataset.hpp"
 #include "../include/popc.hpp"
 
-std::string VERSION_STRING = "0.1 (beta)";
+std::string VERSION_STRING = "0.2 (beta)";
 
 enum verbosity_level : char {
 	QUIET = 0,
@@ -43,9 +43,14 @@ void short_usage( char const * program ) {
 
 void usage( char const * program ) {
 	std::cerr << "Usage: " << program << " [OPTION]... [FILE]                                     \n";
-	std::cerr << "Currently, generate k-d tree from input file of points in format (x1,x2,...xn). \n";
-	std::cerr << "Accepts either standard input or reads from a file. Named pipes and process     \n";
-	std::cerr << "substitution may also be used as the file argument.                             \n";
+	std::cerr << "Generate POPC cluster assignments from input. Input may be taken either from    \n";
+	std::cerr << "standard input or from [FILE] if standard input is not provided. Input is read  \n";
+	std::cerr << "once as a stream, so named pipes and process substitution may also be used as   \n";
+	std::cerr << "[FILE] argument. Input must be tabular data in the form of Boolean (0 or 1)     \n";
+	std::cerr << "values separated by tab, or CHAR, if specified. Data must be preceded by a      \n";
+	std::cerr << "single-line header naming the columns Output takes the form of a single integer \n";
+	std::cerr << "cluster assignment per line, where each line corresponds to the data row of the \n";
+	std::cerr << "input.
 	std::cerr << "                                                                                \n";
 	std::cerr << "  -t, --delimiter=CHAR      use CHAR for field separator                        \n";
 	std::cerr << "                            defaults to TAB if not provided                     \n";
@@ -219,7 +224,7 @@ int main( int argc, char* argv[] ) {
 	// output results
 	log_message( "Outputting results...", INFO, START );
 	for( auto val : result ) {
-		std::cerr << val << "\n";
+		std::cout << val << "\n";
 	}
 	log_message( "DONE", INFO, FINISH );
 
