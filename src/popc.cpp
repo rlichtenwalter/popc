@@ -54,6 +54,10 @@ void usage( char const * program ) {
 	std::cerr << "                                                                                \n";
 	std::cerr << "  -t, --delimiter=CHAR      use CHAR for field separator                        \n";
 	std::cerr << "                            defaults to TAB if not provided                     \n";
+	std::cerr << "  -c, --clusters=CFILE      use CFILE as the file containing pre-generated      \n";
+	std::cerr << "                            k-means cluster assignments; must take the form of  \n";
+	std::cerr << "                            a list, one cluster assignment per line, ordered    \n";
+	std::cerr << "                            according to the order of the instances             \n";
 	std::cerr << "  -v, --verbosity=VALUE     one of {0,1,2,3,quiet,warning,info,debug};          \n";
 	std::cerr << "                            defaults to 1=warning if not provided               \n";
 	std::cerr << "  -h, --help                display this help and exit                          \n";
@@ -92,6 +96,7 @@ int main( int argc, char* argv[] ) {
 	// disable I/O sychronization for better I/O performance
 	std::ios_base::sync_with_stdio( false );
 
+	const char * cfile = nullptr;
 	std::ifstream ifs;
 
 	int c;
@@ -99,11 +104,12 @@ int main( int argc, char* argv[] ) {
 	while( true ) {
 		static struct option long_options[] = {
 				{ "delimiter", required_argument, 0, 't' },
+				{ "clusters", required_argument, 0, 'c' },
 				{ "verbosity", required_argument, 0, 'v' },
 				{ "help", no_argument, 0, 'h' },
 				{ "version", no_argument, 0, 'V' }
 				};
-		c = getopt_long( argc, argv, "t:v:whV", long_options, &option_index );
+		c = getopt_long( argc, argv, "t:c:v:whV", long_options, &option_index );
 		if( c == -1 ) {
 			break;
 		}
@@ -117,6 +123,9 @@ int main( int argc, char* argv[] ) {
 				} else {
 					DELIMITER = optarg[0];
 				}
+				break;
+			case 'c':
+				cfile = optarg;
 				break;
 			case 'v':
 				if( strcmp( optarg, "0" ) == 0 || strcmp( optarg, "quiet" ) == 0 ) {
@@ -165,6 +174,7 @@ int main( int argc, char* argv[] ) {
 		while( ifs.good() ) {
 			data = popc::dataset( ifs, DELIMITER );
 		}
+		ifs.close();
 	} else {
 		log_message( "Reading from standard input...", DEBUG, STANDARD );
 		while( std::cin.good() ) {
@@ -174,36 +184,68 @@ int main( int argc, char* argv[] ) {
 	}
 	log_message( "DONE", INFO, FINISH );
 
-	// generate initial clusters
-	log_message( "Performing k-means...", INFO, START );
-	using Matrix = arma::Mat<double>;
-	using Row = arma::Row<std::size_t>;
-	using KMeans = mlpack::kmeans::KMeans<
-			mlpack::metric::EuclideanDistance,
-			mlpack::kmeans::SampleInitialization,
-			mlpack::kmeans::MaxVarianceNewCluster,
-			mlpack::kmeans::HamerlyKMeans,
-			Matrix>;
-	
-	KMeans clusterer;
-	Matrix armadata( data.num_attributes(), data.num_instances() );
-	Row assignments( data.num_instances() );
-	for( dataset::size_type instance_num = 0; instance_num < data.num_instances(); ++instance_num ) {
-		for( dataset::size_type attribute_num = 0; attribute_num < data.num_attributes(); ++attribute_num ) {
-			// transpose is being performed here for Armadillo's exposed column-major storage
-			armadata.at( attribute_num, instance_num ) = data( instance_num, attribute_num );
-		}
-	}
-
 	std::size_t initial_num_clusters = data.num_instances() / 2;
-	clusterer.Cluster( armadata, initial_num_clusters, assignments, false );
-	log_message( "DONE", INFO, FINISH );
+	std::vector<std::size_t> assignments_vec( data.num_instances() );
+	if( cfile != nullptr ) {
+		// read k-means cluster assignments, if provided
+		log_message( "Reading clustering assignments...", INFO, START );
+		auto cluster_ifs = std::ifstream( cfile );
+		std::size_t instance_num = 0;
+		std::size_t cluster_num;
+		while( cluster_ifs >> cluster_num ) {
+			if( instance_num >= data.num_instances() ) {
+				log_message( "error: too many lines in cluster file for the number of instances read in data file", QUIET, STANDARD );
+				return 2;
+			}
+			if( cluster_num >= initial_num_clusters ) {
+				log_message( "error: cluster identifier exceeds permitted number of clusters given number of instances in data file", QUIET, STANDARD );
+				return 2;
+			}
+			if( cluster_ifs.get() != '\n' ) {
+				log_message( "error: unexpected character in cluster file", QUIET, STANDARD );
+				return 2;
+			}
+			assignments_vec[ instance_num++ ] = cluster_num;
+		}
+		cluster_ifs.close();
+		log_message( "DONE", INFO, FINISH );
+	} else {
+		// otherwise generate initial k-means clusters
+		log_message( "Performing k-means...", INFO, START );
+		using Matrix = arma::Mat<double>;
+		using Row = arma::Row<std::size_t>;
+		using KMeans = mlpack::kmeans::KMeans<
+				mlpack::metric::EuclideanDistance,
+				mlpack::kmeans::SampleInitialization,
+				mlpack::kmeans::MaxVarianceNewCluster,
+				mlpack::kmeans::HamerlyKMeans,
+				Matrix>;
+	
+		KMeans clusterer;
+		Matrix armadata( data.num_attributes(), data.num_instances() );
+		Row assignments( data.num_instances() );
+		for( dataset::size_type instance_num = 0; instance_num < data.num_instances(); ++instance_num ) {
+			for( dataset::size_type attribute_num = 0; attribute_num < data.num_attributes(); ++attribute_num ) {
+				// transpose is being performed here for Armadillo's exposed column-major storage
+				armadata.at( attribute_num, instance_num ) = data( instance_num, attribute_num );
+			}
+		}
 
+		clusterer.Cluster( armadata, initial_num_clusters, assignments, false );
+
+		// moving cluster assignments into vector for unified processing later
+		// negligible expense in time and space compared to other operations
+		for( std::size_t instance_num = 0; instance_num < assignments.n_elem; ++instance_num ) {
+			assignments_vec[ instance_num ] = assignments[ instance_num ];
+		}
+		log_message( "DONE", INFO, FINISH );
+	}
+	
 	// process cluster assignments for easier usage
 	log_message( "Processing cluster assignments...", INFO, START );
 	std::vector<popc::cluster> clusters( initial_num_clusters, popc::cluster( data.num_attributes() ) );
-	for( std::size_t instance_num = 0; instance_num < assignments.n_elem; ++instance_num ) {
-		auto cluster_num = assignments[ instance_num ];
+	for( std::size_t instance_num = 0; instance_num < assignments_vec.size(); ++instance_num ) {
+		auto cluster_num = assignments_vec[ instance_num ];
 		auto & cluster = clusters[ cluster_num ];
 		cluster.add_instance( instance_num );
 		for( std::size_t attribute_num = 0; attribute_num < data.num_attributes(); ++attribute_num ) {
