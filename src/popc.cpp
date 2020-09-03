@@ -58,6 +58,10 @@ void usage( char const * program ) {
 	std::cerr << "                            k-means cluster assignments; must take the form of  \n";
 	std::cerr << "                            a list, one cluster assignment per line, ordered    \n";
 	std::cerr << "                            according to the order of the instances             \n";
+	std::cerr << "  -m, --multiplier=MULT     multiplying constant C_m from POPC paper            \n";
+	std::cerr << "                            defaults to 1000.0 if not provided                  \n";
+	std::cerr << "  -p  --power=POW           power constant P from POPC paper                    \n";
+	std::cerr << "                            defaults to 10.0 if not provided                    \n";
 	std::cerr << "  -v, --verbosity=VALUE     one of {0,1,2,3,quiet,warning,info,debug};          \n";
 	std::cerr << "                            defaults to 1=warning if not provided               \n";
 	std::cerr << "  -h, --help                display this help and exit                          \n";
@@ -100,16 +104,20 @@ int main( int argc, char* argv[] ) {
 	std::ifstream ifs;
 
 	int c;
+	double m = 1000.0;
+	double p = 10.0;
 	int option_index = 0;
 	while( true ) {
 		static struct option long_options[] = {
 				{ "delimiter", required_argument, 0, 't' },
 				{ "clusters", required_argument, 0, 'c' },
+				{ "multiplier", required_argument, 0, 'm' },
+				{ "power", required_argument, 0, 'p' },
 				{ "verbosity", required_argument, 0, 'v' },
 				{ "help", no_argument, 0, 'h' },
 				{ "version", no_argument, 0, 'V' }
 				};
-		c = getopt_long( argc, argv, "t:c:v:whV", long_options, &option_index );
+		c = getopt_long( argc, argv, "t:c:m:p:v:whV", long_options, &option_index );
 		if( c == -1 ) {
 			break;
 		}
@@ -127,7 +135,23 @@ int main( int argc, char* argv[] ) {
 			case 'c':
 				cfile = optarg;
 				break;
-			case 'v':
+			case 'm': {
+				char * pend;
+				errno = 0;
+				m = strtod( optarg, &pend );
+				if( errno != 0 || *pend != '\0' ) {
+					std::cerr << argv[0] << ": " << "  -m, --multiplier=MULT    must be a valid floating point value\n";
+				}
+				break;
+			} case 'p': {
+				char * pend;
+				errno = 0;
+				p = strtod( optarg, &pend );
+				if( errno != 0 || *pend != '\0' ) {
+					std::cerr << argv[0] << ": " << "  -p, --power=POW          must be a valid floating point value\n";
+				}
+				break;
+			} case 'v':
 				if( strcmp( optarg, "0" ) == 0 || strcmp( optarg, "quiet" ) == 0 ) {
 					VERBOSITY = QUIET;
 				} else if( strcmp( optarg, "1" ) == 0 || strcmp( optarg, "warning" ) == 0 ) {
@@ -260,7 +284,7 @@ int main( int argc, char* argv[] ) {
 	log_message( "Executing POPC algorithm...", INFO, START );
 	std::list<popc::cluster> clusters_list;
 	std::move( clusters.begin(), clusters.end(), std::back_inserter( clusters_list ) );
-	auto result = popc::popc( data, clusters_list );
+	auto result = popc::popc( data, clusters_list, m, p );
 	log_message( "DONE", INFO, FINISH );
 	
 	// output results
