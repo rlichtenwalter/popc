@@ -13,7 +13,6 @@
 #include <string>
 #include <vector>
 #include <mlpack/methods/kmeans/kmeans.hpp>
-#include <mlpack/methods/kmeans/hamerly_kmeans.hpp>
 #include "../include/cluster.hpp"
 #include "../include/dataset.hpp"
 #include "../include/popc.hpp"
@@ -242,7 +241,7 @@ int main( int argc, char* argv[] ) {
 				mlpack::metric::EuclideanDistance,
 				mlpack::kmeans::SampleInitialization,
 				mlpack::kmeans::MaxVarianceNewCluster,
-				mlpack::kmeans::HamerlyKMeans,
+				mlpack::kmeans::NaiveKMeans,
 				Matrix>;
 	
 		KMeans clusterer;

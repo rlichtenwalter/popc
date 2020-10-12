@@ -70,7 +70,6 @@ namespace popc {
 				}
 			}
 		}
-		
 		std::vector<std::size_t> labels( ds.num_instances() );
 		std::size_t cluster_index = 0;
 		for( auto const & cluster : clusters ) {

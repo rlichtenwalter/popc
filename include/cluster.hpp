@@ -2,6 +2,7 @@
 #define POPC_CLUSTER_HPP
 
 #include <iostream>
+#include <list>
 #include <vector>
 
 namespace popc {

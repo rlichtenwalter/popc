@@ -2,6 +2,7 @@
 #define POPC_DATASET_HPP
 
 #include <iostream>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -17,6 +18,7 @@ namespace popc {
 			using const_iterator = storage_type::const_iterator;
 			dataset() : _names(), _data(), _num_instances(), _positive_counts() {}
 			dataset( std::istream & is, char delimiter = '\t' );
+			dataset( storage_type data, size_type num_instances, size_type num_attributes, std::vector<std::string> names = std::vector<std::string>() );
 			size_type num_instances() const;
 			size_type num_attributes() const;
 			value_type operator()( size_type instance_num, size_type attribute_num ) const;
@@ -90,6 +92,27 @@ namespace popc {
 			is.peek();
 		}
 		_data.shrink_to_fit();
+	}
+
+
+	dataset::dataset( storage_type data, size_type num_instances, size_type num_attributes, std::vector<std::string> names ) : _names( std::move( names ) ), _data( std::move( data ) ), _num_instances( num_instances ), _positive_counts( num_attributes, 0 ) {
+		if( num_instances * num_attributes != _data.size() ) {
+			throw std::logic_error( "data size must equal the product of num_instances and num_attributes" );
+		}
+		if( _names.empty() ) {
+			for( size_type i = 0; i < num_attributes; ++i ) {
+				_names.emplace_back( "attr" + std::to_string( i + 1 ) );
+			}
+		} else if( num_attributes != _names.size() ) {
+			throw std::logic_error( "names size must either equal num_attributes or be zero" );
+		}
+		for( size_type instance_num = 0; instance_num < num_instances; ++instance_num ) {
+			for( size_type attribute_num = 0; attribute_num < num_attributes; ++attribute_num ) {
+				if( (*this)( instance_num, attribute_num ) ) {
+					++_positive_counts[ attribute_num ];
+				}
+			}
+		}
 	}
 
 	dataset::size_type dataset::num_instances() const {
