@@ -43,6 +43,8 @@ public:
 
   [[nodiscard]] iterator begin() noexcept { return members_.begin(); }
   [[nodiscard]] iterator end() noexcept { return members_.end(); }
+  [[nodiscard]] const_iterator begin() const noexcept { return members_.begin(); }
+  [[nodiscard]] const_iterator end() const noexcept { return members_.end(); }
   [[nodiscard]] const_iterator cbegin() const noexcept { return members_.cbegin(); }
   [[nodiscard]] const_iterator cend() const noexcept { return members_.cend(); }
 

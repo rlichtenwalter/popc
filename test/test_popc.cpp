@@ -20,7 +20,7 @@ namespace {
 // refinement can run incrementally without having to reseed the counts.
 std::list<popc::cluster> build_clusters(popc::dataset const &ds,
                                         std::vector<std::size_t> const &assignments) {
-  auto const k = *std::max_element(assignments.begin(), assignments.end()) + 1;
+  auto const k = *std::ranges::max_element(assignments) + 1;
   std::vector<popc::cluster> vec(k, popc::cluster{ds.num_attributes()});
   for (std::size_t i = 0; i < assignments.size(); ++i) {
     auto &c = vec[assignments[i]];

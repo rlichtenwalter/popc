@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - README expanded with algorithm summary, attribution to Peter Taraba, citations to the WCECS 2017 paper and the Springer chapter, link to the C# reference, and an explicit list of enhancements over the reference implementation
 
 ### Changed
+- `popc::cluster` exposes `const_iterator begin() const` / `end() const` overloads so range-based `for` works on a const cluster
 - Headers moved from `include/` to `include/popc/` subdirectory; consumers now use `#include <popc/popc.hpp>` etc.
 - LICENSE copyright year updated to 2020-2026
 - C++ standard raised from C++14 to C++20 throughout the codebase
@@ -35,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Sanitize preset now runs ASan with `detect_leaks=1`; first-party-only build no longer needs to suppress leaks from uninstrumented system libraries
 - Empty input (zero-instance dataset) no longer dereferences `end()` of an empty assignment vector; CLI exits cleanly with no output
 - Reformat the test_*.cpp files with the project's pinned clang-format v22.1.2; they predated the pre-commit hook install and had drifted slightly from the canonical formatting, which was caught by the CI quality job's `pre-commit run --all-files` step on the first pipeline execution
+- Replace the C-style index loop in `test_cluster.cpp` with a range-based `for` over `std::as_const(c)`, and `std::max_element(begin, end)` with `std::ranges::max_element(range)` in `test_popc.cpp` — both flagged by the CI lint job's clang-tidy `modernize-*` checks (which run only against source TUs, not headers, so they were not caught by the pre-commit hooks)
 
 ## [0.5.0] - 2020-12-07
 
