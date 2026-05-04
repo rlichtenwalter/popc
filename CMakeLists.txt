@@ -88,7 +88,7 @@ set_target_properties(popc-cli PROPERTIES OUTPUT_NAME popc)
 target_compile_options(popc-cli PRIVATE
     ${POPC_WARNING_FLAGS}
     ${POPC_SANITIZE_FLAGS}
-    $<$<CONFIG:Release>:-O3 -march=native -fomit-frame-pointer -DNDEBUG>
+    $<$<CONFIG:Release>:-O3 -fomit-frame-pointer -DNDEBUG>
     $<$<CONFIG:Debug>:-Og -g -fno-omit-frame-pointer>
 )
 target_link_options(popc-cli PRIVATE ${POPC_SANITIZE_FLAGS})

@@ -164,9 +164,11 @@ TEST_CASE("popc: empty seed clusters are removed", "[popc]") {
 }
 
 TEST_CASE("popc: parameter overrides are honored", "[popc]") {
-  // With a power of 1, J becomes constant (the paper's equation 1) and no
-  // move can ever increase it strictly. popc must therefore produce no
-  // mergers, leaving the seed partition untouched.
+  // With a power of 1, J is linear in the per-attribute probabilities
+  // rather than concentrating mass at outer values, so the gradient that
+  // would normally pull duplicate instances together is absent. On this
+  // single-attribute, all-positive seed every move's delta is zero (no
+  // strict improvement), so popc must leave the seed partition untouched.
   std::istringstream in{"a\n1\n1\n1\n"};
   popc::dataset ds{in};
 
