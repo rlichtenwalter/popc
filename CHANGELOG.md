@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Gitea Actions CI with build/test, quality, lint, and sanitize jobs
 - CMake install targets with package config and pkg-config support
 - CLI integration tests via CTest
+- Full Catch2-based unit test suite (one test file per public header) covering cluster, dataset, popc, and the bitpacked k-modes seeder; auto-discovered via `catch_discover_tests`
+- Regression test that pins popc's output on `test/data.tsv + test/clusters.list` against a captured baseline so future refactors cannot silently drift
+- Expanded CLI/E2E test coverage: custom delimiter, custom multiplier/power, all eight verbosity values, missing-cluster-file path, multi-character delimiter rejection, malformed numeric arguments, malformed input data
+- README expanded with algorithm summary, attribution to Peter Taraba, citations to the WCECS 2017 paper and the Springer chapter, link to the C# reference, and an explicit list of enhancements over the reference implementation
 
 ### Changed
 - Headers moved from `include/` to `include/popc/` subdirectory; consumers now use `#include <popc/popc.hpp>` etc.
