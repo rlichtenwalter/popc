@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 - Headers moved from `include/` to `include/popc/` subdirectory; consumers now use `#include <popc/popc.hpp>` etc.
+- LICENSE copyright year updated to 2020-2026
 - C++ standard raised from C++14 to C++20 throughout the codebase
 - k-means seeding replaced with a header-only bitpacked binary k-modes implementation (`popc::detail::bitpacked_kmodes_seed`) using `std::popcount` for Hamming distance; eliminates the mlpack and Armadillo system dependencies
 - `--version` now reports the actual version from the `VERSION` file (was hardcoded as `0.2 (beta)`)
