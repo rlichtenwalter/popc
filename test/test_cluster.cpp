@@ -1,4 +1,5 @@
 #include <iterator>
+#include <utility>
 
 #include <catch2/catch_test_macros.hpp>
 
@@ -86,8 +87,8 @@ TEST_CASE("cluster: const iteration yields the inserted indices", "[cluster]") {
   c.add_instance(30);
 
   std::vector<std::size_t> seen;
-  for (auto it = c.cbegin(); it != c.cend(); ++it) {
-    seen.push_back(*it);
+  for (auto const idx : std::as_const(c)) {
+    seen.push_back(idx);
   }
   CHECK(seen == std::vector<std::size_t>{10, 20, 30});
 }
