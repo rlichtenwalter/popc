@@ -40,7 +40,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y clang lld libarmadillo-dev libmlpack-dev
+          sudo apt-get install -y clang lld
 
       - name: Configure
         run: cmake --preset=${{ matrix.preset }}
@@ -81,7 +81,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y clang lld libarmadillo-dev libmlpack-dev
+          sudo apt-get install -y clang lld
           pip install clang-tidy==20.1.0
 
       - name: Configure (for compile_commands.json)
@@ -101,18 +101,9 @@ jobs:
     # Runs the full test suite so any UB or memory bug instantiated in
     # test code fails the PR. Halt-on-error is enforced at compile time
     # via -fno-sanitize-recover=all.
-    #
-    # detect_leaks=0: system libraries (mlpack, armadillo) are not
-    # instrumented; disabling leak detection avoids false positives from
-    # allocations in those libraries that ASan cannot track fully.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libarmadillo-dev libmlpack-dev
 
       - name: Configure (Debug + sanitizers)
         run: cmake --preset=sanitize

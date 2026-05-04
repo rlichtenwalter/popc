@@ -1,87 +1,56 @@
 #ifndef POPC_CLUSTER_HPP
 #define POPC_CLUSTER_HPP
 
-#include <iostream>
+#include <cstddef>
 #include <list>
 #include <vector>
 
 namespace popc {
-	class cluster {
-		private:
-			using storage_type = std::list<std::size_t>;
-		public:
-			using const_iterator = storage_type::const_iterator;
-			using iterator = storage_type::iterator;
-			cluster() = delete;
-			cluster( std::size_t num_attributes ) : _members(), _attribute_counts( num_attributes, 0 ) {}
-			bool empty() const;
-			std::size_t num_instances() const;
-			void add_instance( std::size_t instance_num );
-			iterator remove_instance( iterator it );
-			void increment_attribute_count( std::size_t attribute_num );
-			void decrement_attribute_count( std::size_t attribute_num );
-			std::size_t attribute_count( std::size_t attribute_num ) const;
-			iterator begin();
-			iterator end();
-			const_iterator cbegin() const;
-			const_iterator cend() const;
-		private:
-			storage_type _members;
-			std::vector<std::size_t> _attribute_counts;
-	};
 
-	bool cluster::empty() const {
-		return _members.empty();
-	}
+// A cluster is a set of dataset instance indices, plus a per-attribute count
+// of how many of those instances have the attribute set. The paper notes that
+// maintaining these counts incrementally is the central optimization: without
+// it, each move would have to recount all attributes from scratch.
+class cluster {
+public:
+  using size_type = std::size_t;
 
-	std::size_t cluster::num_instances() const {
-		return _members.size();
-	}
+private:
+  using storage_type = std::list<size_type>;
 
-	void cluster::add_instance( std::size_t instance_num ) {
-		_members.push_back( instance_num );
-	}
+public:
+  using iterator = storage_type::iterator;
+  using const_iterator = storage_type::const_iterator;
 
-	cluster::iterator cluster::remove_instance( iterator it ) {
-		return _members.erase( it );
-	}
+  cluster() = delete;
+  explicit cluster(size_type num_attributes) : attribute_counts_(num_attributes, 0) {}
 
-	void cluster::increment_attribute_count( std::size_t attribute_num ) {
-		++_attribute_counts[ attribute_num ];
-	}
+  [[nodiscard]] bool empty() const noexcept { return members_.empty(); }
+  [[nodiscard]] size_type num_instances() const noexcept { return members_.size(); }
 
-	void cluster::decrement_attribute_count( std::size_t attribute_num ) {
-		--_attribute_counts[ attribute_num ];
-	}
-	
-	std::size_t cluster::attribute_count( std::size_t attribute_num ) const {
-		return _attribute_counts[ attribute_num ];
-	}
+  void add_instance(size_type instance_num) { members_.push_back(instance_num); }
+  iterator remove_instance(iterator it) { return members_.erase(it); }
 
-	cluster::iterator cluster::begin() {
-		return _members.begin();
-	}
-	
-	cluster::iterator cluster::end() {
-		return _members.end();
-	}
+  void increment_attribute_count(size_type attribute_num) noexcept {
+    ++attribute_counts_[attribute_num];
+  }
+  void decrement_attribute_count(size_type attribute_num) noexcept {
+    --attribute_counts_[attribute_num];
+  }
+  [[nodiscard]] size_type attribute_count(size_type attribute_num) const noexcept {
+    return attribute_counts_[attribute_num];
+  }
 
-	cluster::const_iterator cluster::cbegin() const {
-		return _members.cbegin();
-	}
+  [[nodiscard]] iterator begin() noexcept { return members_.begin(); }
+  [[nodiscard]] iterator end() noexcept { return members_.end(); }
+  [[nodiscard]] const_iterator cbegin() const noexcept { return members_.cbegin(); }
+  [[nodiscard]] const_iterator cend() const noexcept { return members_.cend(); }
 
-	cluster::const_iterator cluster::cend() const {
-		return _members.cend();
-	}
-/*
-	std::ostream & operator<<( std::ostream & os, cluster const & c ) {
-		os << "Members: ";
-		std::copy( _members.begin(), members.end(), std::ostream_iterator<std::size_t>( os, "," ) );
-		os << "\n";
-		os << "Attribute counts: ";
-		std::copy( _attribute_counts.begin(), attribute_counts.end(); std::ostream_inserter<std::size_t>( os, "," ) );
-		os << "\n";
-	}
-*/
-}
+private:
+  storage_type members_;
+  std::vector<size_type> attribute_counts_;
+};
+
+} // namespace popc
+
 #endif

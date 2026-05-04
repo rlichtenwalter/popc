@@ -16,32 +16,6 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 include(GNUInstallDirs)
 
-# --- Dependencies ---
-find_package(Armadillo REQUIRED)
-if(NOT TARGET Armadillo::Armadillo)
-    add_library(Armadillo::Armadillo IMPORTED INTERFACE)
-    set_target_properties(Armadillo::Armadillo PROPERTIES
-        INTERFACE_INCLUDE_DIRECTORIES "${ARMADILLO_INCLUDE_DIRS}"
-        INTERFACE_LINK_LIBRARIES "${ARMADILLO_LIBRARIES}"
-    )
-endif()
-
-# Try config-mode first (mlpack 4.x ships mlpack-config.cmake); fall
-# back to manual library search for older distributions.
-find_package(mlpack QUIET CONFIG)
-if(NOT mlpack_FOUND)
-    find_library(MLPACK_LIB NAMES mlpack REQUIRED)
-    find_path(MLPACK_INCLUDE NAMES mlpack/methods/kmeans/kmeans.hpp REQUIRED)
-    add_library(mlpack::mlpack IMPORTED INTERFACE)
-    set_target_properties(mlpack::mlpack PROPERTIES
-        INTERFACE_INCLUDE_DIRECTORIES "${MLPACK_INCLUDE}"
-        INTERFACE_LINK_LIBRARIES "${MLPACK_LIB}"
-    )
-    message(STATUS "mlpack found (manual): ${MLPACK_LIB}")
-endif()
-
-find_package(OpenMP)
-
 # --- Header-only library ---
 add_library(popc INTERFACE)
 add_library(popc::popc ALIAS popc)
@@ -60,6 +34,7 @@ target_sources(popc INTERFACE
         include/popc/popc.hpp
         include/popc/cluster.hpp
         include/popc/dataset.hpp
+        include/popc/detail/bitpacked_kmeans.hpp
 )
 
 # --- Warning flags ---
@@ -110,14 +85,7 @@ set(POPC_SANITIZE_FLAGS
 
 # --- CLI tool ---
 add_executable(popc-cli src/popc.cpp)
-target_link_libraries(popc-cli PRIVATE
-    popc::popc
-    Armadillo::Armadillo
-    mlpack::mlpack
-)
-if(OpenMP_CXX_FOUND)
-    target_link_libraries(popc-cli PRIVATE OpenMP::OpenMP_CXX)
-endif()
+target_link_libraries(popc-cli PRIVATE popc::popc)
 target_compile_definitions(popc-cli PRIVATE POPC_VERSION="${PROJECT_VERSION}")
 set_target_properties(popc-cli PROPERTIES OUTPUT_NAME popc)
 
