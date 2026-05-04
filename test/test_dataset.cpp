@@ -57,8 +57,7 @@ TEST_CASE("dataset: parser rejects inconsistent column counts", "[dataset][error
   CHECK_THROWS_AS(popc::dataset{in}, std::runtime_error);
 }
 
-TEST_CASE("dataset: parser rejects unexpected delimiter at start of row",
-          "[dataset][error]") {
+TEST_CASE("dataset: parser rejects unexpected delimiter at start of row", "[dataset][error]") {
   std::istringstream in{"a\tb\n\t0\n"};
   CHECK_THROWS_AS(popc::dataset{in}, std::runtime_error);
 }
@@ -93,14 +92,12 @@ TEST_CASE("dataset: data-vector constructor with custom names", "[dataset]") {
   CHECK(ds.attribute_name(1) == "beta");
 }
 
-TEST_CASE("dataset: data-vector constructor rejects size mismatches",
-          "[dataset][error]") {
-  std::vector<bool> data{true, false, true};  // 3 elements but 2x2 = 4
+TEST_CASE("dataset: data-vector constructor rejects size mismatches", "[dataset][error]") {
+  std::vector<bool> data{true, false, true}; // 3 elements but 2x2 = 4
   CHECK_THROWS_AS(popc::dataset(data, 2, 2), std::logic_error);
 }
 
-TEST_CASE("dataset: data-vector constructor rejects names size mismatch",
-          "[dataset][error]") {
+TEST_CASE("dataset: data-vector constructor rejects names size mismatch", "[dataset][error]") {
   std::vector<bool> data{true, false, true, false};
   std::vector<std::string> bad_names{"only_one"};
   CHECK_THROWS_AS(popc::dataset(data, 2, 2, bad_names), std::logic_error);
@@ -123,10 +120,7 @@ TEST_CASE("dataset: positive_counts aggregate across instances", "[dataset]") {
   // attr1: 2 positives (instances 1, 3)
   // attr2: 3 positives (instances 0, 2, 3)
   std::vector<bool> data{
-      true, false, true,
-      false, true, false,
-      false, false, true,
-      false, true, true,
+      true, false, true, false, true, false, false, false, true, false, true, true,
   };
   popc::dataset ds{data, 4, 3};
   CHECK(ds.positive_count(0) == 1);

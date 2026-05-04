@@ -19,7 +19,7 @@ namespace {
 // Each cluster's attribute_counts are populated from the dataset so the popc
 // refinement can run incrementally without having to reseed the counts.
 std::list<popc::cluster> build_clusters(popc::dataset const &ds,
-                                         std::vector<std::size_t> const &assignments) {
+                                        std::vector<std::size_t> const &assignments) {
   auto const k = *std::max_element(assignments.begin(), assignments.end()) + 1;
   std::vector<popc::cluster> vec(k, popc::cluster{ds.num_attributes()});
   for (std::size_t i = 0; i < assignments.size(); ++i) {
@@ -38,7 +38,7 @@ std::list<popc::cluster> build_clusters(popc::dataset const &ds,
   return out;
 }
 
-}  // namespace
+} // namespace
 
 // ============================================================
 // compute_delta
@@ -61,7 +61,7 @@ TEST_CASE("compute_delta: removing the only contributor decreases p", "[compute_
   // delta = -1^10 + (1/1001)^10 ≈ -1 + tiny ≈ -1
   auto const delta =
       popc::compute_delta<double>(ds, c, 0, /*num_clusters=*/1, /*multiplier=*/1000.0,
-                                   /*power=*/10.0, /*added=*/false);
+                                  /*power=*/10.0, /*added=*/false);
   CHECK_THAT(delta, WithinAbs(-1.0, 1e-6));
 }
 
@@ -78,8 +78,7 @@ TEST_CASE("compute_delta: zero contribution from inactive features", "[compute_d
   CHECK(delta == 0.0);
 }
 
-TEST_CASE("compute_delta: adding to a heavily-populated cluster yields gain",
-          "[compute_delta]") {
+TEST_CASE("compute_delta: adding to a heavily-populated cluster yields gain", "[compute_delta]") {
   // Two-feature dataset where feature 0 is positive in everyone. Adding an
   // instance to a cluster that already has all the positive contributions
   // should increase J for that cluster.
@@ -105,7 +104,7 @@ TEST_CASE("compute_delta: adding to a heavily-populated cluster yields gain",
 TEST_CASE("popc: returns one label per instance", "[popc]") {
   std::istringstream in{"a\tb\n1\t0\n1\t0\n0\t1\n0\t1\n"};
   popc::dataset ds{in};
-  auto clusters = build_clusters(ds, {0, 1, 2, 3});  // each in its own cluster
+  auto clusters = build_clusters(ds, {0, 1, 2, 3}); // each in its own cluster
 
   auto labels = popc::popc(ds, clusters);
   CHECK(labels.size() == ds.num_instances());
@@ -179,8 +178,7 @@ TEST_CASE("popc: parameter overrides are honored", "[popc]") {
   CHECK(labels[0] != labels[2]);
 }
 
-TEST_CASE("popc: float and double specializations agree on label structure",
-          "[popc]") {
+TEST_CASE("popc: float and double specializations agree on label structure", "[popc]") {
   std::istringstream in1{"a\tb\n1\t1\n1\t1\n0\t0\n0\t0\n"};
   popc::dataset ds1{in1};
   std::istringstream in2{"a\tb\n1\t1\n1\t1\n0\t0\n0\t0\n"};

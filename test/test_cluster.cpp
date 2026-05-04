@@ -35,7 +35,7 @@ TEST_CASE("cluster: remove_instance returns next iterator", "[cluster]") {
   REQUIRE(c.num_instances() == 3);
 
   auto it = c.begin();
-  ++it;  // points at 2
+  ++it; // points at 2
   it = c.remove_instance(it);
   CHECK(c.num_instances() == 2);
   REQUIRE(it != c.end());

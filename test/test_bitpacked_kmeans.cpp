@@ -17,8 +17,7 @@ using popc::detail::hamming_distance;
 // bitpacked_dataset
 // ============================================================
 
-TEST_CASE("bitpacked_dataset: dimensions reflect the source dataset",
-          "[bitpacked_dataset]") {
+TEST_CASE("bitpacked_dataset: dimensions reflect the source dataset", "[bitpacked_dataset]") {
   // 70 attributes => spans 2 uint64 words (1 word holds 64 bits).
   std::ostringstream header;
   header << "f0";
@@ -79,8 +78,7 @@ TEST_CASE("hamming_distance: identical vectors have distance 0", "[hamming]") {
   CHECK(hamming_distance(a, a) == 0);
 }
 
-TEST_CASE("hamming_distance: complement has distance equal to bit count",
-          "[hamming]") {
+TEST_CASE("hamming_distance: complement has distance equal to bit count", "[hamming]") {
   std::vector<std::uint64_t> a{0x0ULL, 0x0ULL};
   std::vector<std::uint64_t> b{~0x0ULL, ~0x0ULL};
   CHECK(hamming_distance(a, b) == 128);
@@ -88,22 +86,21 @@ TEST_CASE("hamming_distance: complement has distance equal to bit count",
 
 TEST_CASE("hamming_distance: single-bit difference", "[hamming]") {
   std::vector<std::uint64_t> a{0x1ULL};
-  std::vector<std::uint64_t> b{0x3ULL};  // differs in bit 1
+  std::vector<std::uint64_t> b{0x3ULL}; // differs in bit 1
   CHECK(hamming_distance(a, b) == 1);
 }
 
 TEST_CASE("hamming_distance: multiple-word difference", "[hamming]") {
   std::vector<std::uint64_t> a{0xFFULL, 0x00ULL};
   std::vector<std::uint64_t> b{0x00ULL, 0xFFULL};
-  CHECK(hamming_distance(a, b) == 16);  // 8 differences in each word
+  CHECK(hamming_distance(a, b) == 16); // 8 differences in each word
 }
 
 // ============================================================
 // bitpacked_kmodes_seed
 // ============================================================
 
-TEST_CASE("bitpacked_kmodes_seed: returns one assignment per instance",
-          "[kmodes]") {
+TEST_CASE("bitpacked_kmodes_seed: returns one assignment per instance", "[kmodes]") {
   std::istringstream stream{"a\tb\n1\t0\n0\t1\n1\t1\n0\t0\n"};
   popc::dataset ds{stream};
   bitpacked_dataset bp{ds};
@@ -127,8 +124,7 @@ TEST_CASE("bitpacked_kmodes_seed: deterministic with fixed seed", "[kmodes]") {
   CHECK(a == b);
 }
 
-TEST_CASE("bitpacked_kmodes_seed: different seeds may yield different partitions",
-          "[kmodes]") {
+TEST_CASE("bitpacked_kmodes_seed: different seeds may yield different partitions", "[kmodes]") {
   // Not a strict guarantee — for some inputs every seed converges to the
   // same partition — but with 5 distinct points and k=3, we expect at
   // least one of these seeds to disagree with seed 1.
@@ -149,21 +145,19 @@ TEST_CASE("bitpacked_kmodes_seed: different seeds may yield different partitions
   CHECK(any_different);
 }
 
-TEST_CASE("bitpacked_kmodes_seed: pulls identical instances together",
-          "[kmodes]") {
+TEST_CASE("bitpacked_kmodes_seed: pulls identical instances together", "[kmodes]") {
   // Three groups of identical binary patterns. The seeder should converge
   // such that each group's members share a label.
-  std::istringstream stream{
-      "a\tb\tc\td\n"
-      "1\t1\t0\t0\n"
-      "1\t1\t0\t0\n"
-      "1\t1\t0\t0\n"
-      "0\t0\t1\t1\n"
-      "0\t0\t1\t1\n"
-      "0\t0\t1\t1\n"
-      "1\t0\t1\t0\n"
-      "1\t0\t1\t0\n"
-      "1\t0\t1\t0\n"};
+  std::istringstream stream{"a\tb\tc\td\n"
+                            "1\t1\t0\t0\n"
+                            "1\t1\t0\t0\n"
+                            "1\t1\t0\t0\n"
+                            "0\t0\t1\t1\n"
+                            "0\t0\t1\t1\n"
+                            "0\t0\t1\t1\n"
+                            "1\t0\t1\t0\n"
+                            "1\t0\t1\t0\n"
+                            "1\t0\t1\t0\n"};
   popc::dataset ds{stream};
   bitpacked_dataset bp{ds};
 
@@ -204,8 +198,7 @@ TEST_CASE("bitpacked_kmodes_seed: k larger than n is clamped to n", "[kmodes]") 
   }
 }
 
-TEST_CASE("bitpacked_kmodes_seed: empty dataset returns empty assignment",
-          "[kmodes]") {
+TEST_CASE("bitpacked_kmodes_seed: empty dataset returns empty assignment", "[kmodes]") {
   popc::dataset ds;
   bitpacked_dataset bp{ds};
   auto labels = bitpacked_kmodes_seed(bp, 4, 16, 0ULL);
