@@ -57,9 +57,9 @@ target_sources(popc INTERFACE
     FILE_SET HEADERS
     BASE_DIRS include
     FILES
-        include/popc.hpp
-        include/cluster.hpp
-        include/dataset.hpp
+        include/popc/popc.hpp
+        include/popc/cluster.hpp
+        include/popc/dataset.hpp
 )
 
 # --- Warning flags ---

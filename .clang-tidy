@@ -24,7 +24,7 @@ Checks: >
 
 WarningsAsErrors: '*'
 
-HeaderFilterRegex: 'include/.*\.hpp$'
+HeaderFilterRegex: 'include/popc/.*\.hpp$'
 
 CheckOptions:
   - key: readability-braces-around-statements.ShortStatementLines

@@ -16,6 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - CMake install targets with package config and pkg-config support
 - CLI integration tests via CTest
 
+### Changed
+- Headers moved from `include/` to `include/popc/` subdirectory; consumers now use `#include <popc/popc.hpp>` etc.
+
 ## [0.5.0] - 2020-12-07
 
 ### Added

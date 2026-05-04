@@ -13,9 +13,9 @@
 #include <string>
 #include <vector>
 #include <mlpack/methods/kmeans/kmeans.hpp>
-#include "../include/cluster.hpp"
-#include "../include/dataset.hpp"
-#include "../include/popc.hpp"
+#include <popc/cluster.hpp>
+#include <popc/dataset.hpp>
+#include <popc/popc.hpp>
 
 std::string VERSION_STRING = "0.2 (beta)";
 
