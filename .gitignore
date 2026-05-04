@@ -1,2 +1,7 @@
-bin/*
-*.o
+build/
+.cache/
+.claude/
+**/.vscode
+
+# NFS temporary files (appear when files are deleted while still open over NFS)
+.nfs*

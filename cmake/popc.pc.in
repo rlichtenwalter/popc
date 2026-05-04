@@ -1,0 +1,7 @@
+prefix=@CMAKE_INSTALL_PREFIX@
+includedir=${prefix}/@CMAKE_INSTALL_INCLUDEDIR@
+
+Name: popc
+Description: Efficient C++ implementation of the POPC binary feature clustering algorithm
+Version: @PROJECT_VERSION@
+Cflags: -I${includedir}
