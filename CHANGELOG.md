@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `-v info` no longer collides with `-v warning` (was matching `"1"` instead of `"2"`); `-v debug` now correctly maps to verbosity 3 (was matching `"2"`)
 - Invalid `-m`/`-p` values now exit non-zero instead of printing a warning and continuing with garbage values
 - Read loop no longer reassigns the dataset on every stream iteration
+- Sanitize preset now runs ASan with `detect_leaks=1`; first-party-only build no longer needs to suppress leaks from uninstrumented system libraries
 
 ## [0.5.0] - 2020-12-07
 

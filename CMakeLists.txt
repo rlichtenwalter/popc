@@ -72,10 +72,6 @@ endif()
 # When -DPOPC_SANITIZE=ON, the CLI tool and tests are compiled and
 # linked with AddressSanitizer + UndefinedBehaviorSanitizer. Guarded
 # on Debug builds so Release artifacts are unaffected.
-#
-# Note: system libraries (mlpack, armadillo) are not instrumented, so
-# sanitizer findings from those paths are suppressed. detect_leaks is
-# disabled in the sanitize test preset to avoid false positives.
 option(POPC_SANITIZE "Enable AddressSanitizer + UndefinedBehaviorSanitizer in Debug builds" OFF)
 set(POPC_SANITIZE_FLAGS
     $<$<BOOL:${POPC_SANITIZE}>:$<$<CONFIG:Debug>:-fsanitize=address,undefined>>
