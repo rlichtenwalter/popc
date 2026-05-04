@@ -62,6 +62,20 @@ TEST_CASE("dataset: parser rejects unexpected delimiter at start of row", "[data
   CHECK_THROWS_AS(popc::dataset{in}, std::runtime_error);
 }
 
+TEST_CASE("dataset: parser error reports the actual offending line number", "[dataset][error]") {
+  // Three good rows, then a malformed row. The reported line must be 5
+  // (1 header + 3 good data rows + the bad row), not 2 (which is what the
+  // parser used to report when instance_num was never incremented).
+  std::istringstream in{"a\tb\n1\t0\n0\t1\n1\t1\nbad\t0\n"};
+  try {
+    popc::dataset ds{in};
+    FAIL("expected parser to throw on malformed row");
+  } catch (std::runtime_error const &e) {
+    std::string const msg{e.what()};
+    CHECK(msg.find("line 5") != std::string::npos);
+  }
+}
+
 TEST_CASE("dataset: data-vector constructor", "[dataset]") {
   // 2 instances x 3 attributes, row-major
   std::vector<bool> data{true, false, true, false, true, false};

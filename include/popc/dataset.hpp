@@ -192,13 +192,14 @@ inline dataset::dataset(std::istream &is, char delimiter) {
     } else if (c == '\n') {
       if (attribute_num + 1 == num_attributes()) {
         attribute_num = 0;
+        ++instance_num;
       } else {
         throw std::runtime_error{"inconsistent column count at line " +
                                  std::to_string(instance_num + 2)};
       }
     } else {
       throw std::runtime_error{std::string{"invalid character '"} + c + "' at line " +
-                               std::to_string(instance_num)};
+                               std::to_string(instance_num + 2)};
     }
     is.peek();
   }
@@ -250,8 +251,11 @@ inline std::ostream &operator<<(std::ostream &os, dataset const &ds) {
       os << '\t';
     }
   }
+  // ds.data_ is std::vector<bool>; range-iter yields proxy refs, so
+  // explicitly cast through int to print as 0/1 rather than relying on
+  // the proxy's implicit conversion sequence.
   for (auto const val : ds.data_) {
-    os << val;
+    os << static_cast<int>(val);
     ++attribute_num;
     if (attribute_num == ds.num_attributes()) {
       os << '\n';

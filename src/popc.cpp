@@ -49,6 +49,10 @@ enum message_type : char {
   FINISH = 2,
 };
 
+// TU-local CLI configuration. These exist so log_message() and the parser
+// constructor call site can read the active settings without threading
+// them through every signature. Anonymous-namespace + single-process CLI
+// makes this safe; do not lift this pattern into the popc:: library.
 char DELIMITER = '\t';
 verbosity_level VERBOSITY = WARNING;
 

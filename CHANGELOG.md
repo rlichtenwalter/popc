@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Changed
 - `popc::cluster` exposes `const_iterator begin() const` / `end() const` overloads so range-based `for` works on a const cluster
 - Headers moved from `include/` to `include/popc/` subdirectory; consumers now use `#include <popc/popc.hpp>` etc.
+- Drop `-march=native` from the Release build of `popc-cli`; the binary is now portable across x86-64 baselines, so a release artifact built on one machine no longer SIGILLs on a host with a lower ISA. Power users can rebuild with their preferred `-march` flag if they need maximum local performance.
 - LICENSE copyright year updated to 2020-2026
 - C++ standard raised from C++14 to C++20 throughout the codebase
 - k-means seeding replaced with a header-only bitpacked binary k-modes implementation (`popc::detail::bitpacked_kmodes_seed`) using `std::popcount` for Hamming distance; eliminates the mlpack and Armadillo system dependencies
@@ -38,6 +39,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Empty input (zero-instance dataset) no longer dereferences `end()` of an empty assignment vector; CLI exits cleanly with no output
 - Reformat the test_*.cpp files with the project's pinned clang-format v22.1.2; they predated the pre-commit hook install and had drifted slightly from the canonical formatting, which was caught by the CI quality job's `pre-commit run --all-files` step on the first pipeline execution
 - Replace the C-style index loop in `test_cluster.cpp` with a range-based `for` over `std::as_const(c)`, and `std::max_element(begin, end)` with `std::ranges::max_element(range)` in `test_popc.cpp` — both flagged by the CI lint job's clang-tidy `modernize-*` checks (which run only against source TUs, not headers, so they were not caught by the pre-commit hooks)
+- Dataset stream parser now reports the correct line number on malformed input. `instance_num` was declared in the body loop but never incremented, so every error message used to claim "line 2" regardless of which row was actually offending. Also added the missing `+ 2` adjustment on the "invalid character at separator position" error site
+- Bitpacked k-modes majority-vote test rewritten as `count > size - count` (mathematically equivalent to `2 * count > size` but overflow-free on 32-bit `size_t` for cluster sizes above ~2 billion)
+- `dataset::operator<<` casts `std::vector<bool>` proxy reference values through `int` before stream insertion, so output remains correct if the storage type is ever changed
 
 ## [0.5.0] - 2020-12-07
 

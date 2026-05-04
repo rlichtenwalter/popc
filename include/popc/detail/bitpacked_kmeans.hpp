@@ -212,9 +212,11 @@ hamming_distance(std::span<bitpacked_dataset::word_type const> a,
           }
         }
       }
-      // Strict majority: 2 * count > size, integer-safe.
+      // Strict majority: count > size - count is equivalent to 2*count > size
+      // but avoids the intermediate multiplication that would overflow on a
+      // 32-bit size_t with cluster sizes above ~2 billion.
       for (std::size_t j = 0; j < f; ++j) {
-        if (2 * bit_counts[j] > size) {
+        if (bit_counts[j] > size - bit_counts[j]) {
           centroids[cent_off + j / bitpacked_dataset::bits_per_word] |=
               (word_type{1} << (j % bitpacked_dataset::bits_per_word));
         }
