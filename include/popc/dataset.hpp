@@ -11,9 +11,20 @@
 
 namespace popc {
 
-// Binary feature dataset: row-major flat std::vector<bool> storage with named
-// attribute columns. Used as the input to popc::popc() and as the substrate
-// the bitpacked seeder rebuilds into uint64 chunks for popcount kernels.
+/**
+ * @brief Binary feature dataset with named attribute columns.
+ *
+ * Stores `num_instances * num_attributes` boolean values in row-major order
+ * inside a flat `std::vector<bool>`, plus the attribute names parsed from
+ * the input header and a per-attribute positive-count cache. The positive
+ * counts are precomputed at construction so popc::compute_delta() can use
+ * them as the `c(f_i = 1)` term of the probability formula without a full
+ * scan on every call.
+ *
+ * Used as the input to popc::popc() and as the source the bitpacked seeder
+ * (popc::detail::bitpacked_kmodes_seed) repacks into 64-bit chunks for its
+ * popcount distance kernel.
+ */
 class dataset {
   friend std::ostream &operator<<(std::ostream &os, dataset const &ds);
 
@@ -27,26 +38,101 @@ public:
   using size_type = std::size_t;
   using const_iterator = storage_type::const_iterator;
 
+  /** @brief Construct an empty dataset with no instances or attributes. */
   dataset() = default;
+
+  /**
+   * @brief Parse a dataset from a delimited text stream.
+   *
+   * The first line is read as a delimited header of attribute names.
+   * Subsequent lines contain one binary value (`0` or `1`) per column,
+   * separated by `delimiter` and terminated by `'\n'`. The parser throws
+   * `std::runtime_error` on any malformed line — invalid characters,
+   * unexpected delimiters, inconsistent column counts.
+   *
+   * @param is        Input stream positioned at the start of the header.
+   * @param delimiter Column separator. Defaults to TAB (`'\t'`).
+   *
+   * @throws std::runtime_error if the input is not a valid header followed
+   *         by zero or more binary rows.
+   */
   explicit dataset(std::istream &is, char delimiter = '\t');
+
+  /**
+   * @brief Construct directly from a pre-built storage vector.
+   *
+   * Intended for language bindings and unit tests that already have the
+   * data in memory and do not need to round-trip through the text parser.
+   * If `names` is empty, generic names of the form `"attr1"`, `"attr2"`,
+   * ... are generated. The positive-count cache is computed eagerly.
+   *
+   * @param data           Row-major storage of `num_instances * num_attributes` bools.
+   * @param num_instances  Row count of the dataset.
+   * @param num_attributes Column count of the dataset.
+   * @param names          Optional attribute names; must be empty or have
+   *                       size equal to `num_attributes`.
+   *
+   * @throws std::logic_error if `data.size() != num_instances * num_attributes`,
+   *         or if `names` is non-empty and `names.size() != num_attributes`.
+   */
   dataset(storage_type data, size_type num_instances, size_type num_attributes,
           std::vector<std::string> names = {});
 
+  /** @brief Return the number of instances (rows) in the dataset. */
   [[nodiscard]] size_type num_instances() const noexcept { return num_instances_; }
+
+  /** @brief Return the number of attributes (columns) in the dataset. */
   [[nodiscard]] size_type num_attributes() const noexcept { return names_.size(); }
+
+  /**
+   * @brief Read the value at a given instance and attribute.
+   *
+   * @param instance_num  Zero-based row index in `[0, num_instances())`.
+   * @param attribute_num Zero-based column index in `[0, num_attributes())`.
+   * @return `true` if the bit is set, `false` otherwise.
+   */
   [[nodiscard]] value_type operator()(size_type instance_num,
                                       size_type attribute_num) const noexcept {
     return data_[instance_num * num_attributes() + attribute_num];
   }
+
+  /**
+   * @brief Return the parsed name of the given attribute column.
+   *
+   * @param attribute_num Zero-based column index in `[0, num_attributes())`.
+   * @return Const reference to the attribute name.
+   */
   [[nodiscard]] std::string const &attribute_name(size_type attribute_num) const noexcept {
     return names_[attribute_num];
   }
+
+  /**
+   * @brief Return the precomputed positive count for the given attribute.
+   *
+   * @param attribute_num Zero-based column index in `[0, num_attributes())`.
+   * @return Number of instances in the whole dataset for which this
+   *         attribute is set.
+   */
   [[nodiscard]] size_type positive_count(size_type attribute_num) const noexcept {
     return positive_counts_[attribute_num];
   }
+
+  /**
+   * @brief Return a const iterator to the first attribute of an instance.
+   *
+   * @param instance_num Zero-based row index in `[0, num_instances())`.
+   * @return Iterator pointing at the first column of `instance_num`.
+   */
   [[nodiscard]] const_iterator cbegin(size_type instance_num) const noexcept {
     return data_.cbegin() + static_cast<std::ptrdiff_t>(instance_num * num_attributes());
   }
+
+  /**
+   * @brief Return a const iterator past the last attribute of an instance.
+   *
+   * @param instance_num Zero-based row index in `[0, num_instances())`.
+   * @return Iterator pointing one past the last column of `instance_num`.
+   */
   [[nodiscard]] const_iterator cend(size_type instance_num) const noexcept {
     return data_.cbegin() + static_cast<std::ptrdiff_t>((instance_num + 1) * num_attributes());
   }
@@ -142,6 +228,16 @@ inline dataset::dataset(storage_type data, size_type num_instances, size_type nu
   }
 }
 
+/**
+ * @brief Stream-insert the dataset in TAB-delimited text form.
+ *
+ * Writes the header followed by the rows. Output is valid input to the
+ * stream-parsing constructor and produces an identical dataset.
+ *
+ * @param os Stream to write to.
+ * @param ds Dataset to serialize.
+ * @return Reference to `os`.
+ */
 inline std::ostream &operator<<(std::ostream &os, dataset const &ds) {
   dataset::size_type attribute_num = 0;
   for (auto const &name : ds.names_) {
@@ -169,4 +265,4 @@ inline std::ostream &operator<<(std::ostream &os, dataset const &ds) {
 
 } // namespace popc
 
-#endif
+#endif // POPC_DATASET_HPP

@@ -12,17 +12,48 @@
 
 namespace popc {
 
-// Change in J = sum_i sum_k p^P(cl(f_i)=k) when sample `instance_num` is added
-// to or removed from `cluster`. Only attributes that are positive in the
-// instance contribute, since attributes that are zero in the instance leave
-// the cluster's per-feature count unchanged for that move.
-//
-// p(cl(f_i)=k) = (counts * Cm + 1) / (counts_all * Cm + N), where
-//   counts     = c(s_j(f_i)=1, cl(s_j)=k)   — cluster.attribute_count(i)
-//   counts_all = c(f_i=1)                   — ds.positive_count(i)
-//   Cm         = multiplier (paper default 1000)
-//   N          = num_clusters
-//   P          = power (paper default 10, must be > 1)
+/**
+ * @brief Compute the change in the POPC objective J for a single move.
+ *
+ * Evaluates `delta = sum_i [ p_new^P - p_old^P ]` where the sum runs over
+ * the attributes that are positive in instance `instance_num`. Attributes
+ * that are zero in the instance leave the cluster's per-attribute count
+ * unchanged for the candidate move and contribute zero to the delta, so
+ * they are skipped.
+ *
+ * The per-attribute probability is
+ * `p(cluster|f_i) = (counts * Cm + 1) / (counts_all * Cm + N)`, where:
+ *   - `counts`     is `cluster.attribute_count(i)` (cluster-local count
+ *                   of instances with attribute `i` set);
+ *   - `counts_all` is `ds.positive_count(i)` (dataset-wide count of
+ *                   instances with attribute `i` set);
+ *   - `Cm`         is the multiplier hyperparameter (paper default 1000);
+ *   - `N`          is the current number of clusters.
+ *
+ * The exponent `P` is the power hyperparameter (paper default 10, must
+ * be greater than 1 for the objective to be sensitive to outer-mass
+ * concentration rather than uniform).
+ *
+ * @tparam fptype       Floating-point type for the probability arithmetic.
+ *                      `double` is the default and the recommended choice;
+ *                      `float` produces visibly different rankings for
+ *                      borderline moves on large datasets.
+ * @param ds            Dataset providing `positive_count` and the row
+ *                      iterators for `instance_num`.
+ * @param cluster       Source or destination cluster whose `attribute_count`
+ *                      is read for the current `counts` term.
+ * @param instance_num  Zero-based index of the instance being moved.
+ * @param num_clusters  Current number of clusters in the partition (the `N`
+ *                      term in the denominator).
+ * @param multiplier    The `Cm` hyperparameter.
+ * @param power         The `P` hyperparameter.
+ * @param added         `true` if `cluster` is the destination (instance is
+ *                      being added; `counts` increments by 1); `false` if
+ *                      `cluster` is the source (instance is being removed;
+ *                      `counts` decrements by 1).
+ *
+ * @return Change in the cluster's contribution to J for the move.
+ */
 template <typename fptype = double>
 [[nodiscard]] fptype compute_delta(popc::dataset const &ds, popc::cluster const &cluster,
                                    std::size_t instance_num, std::size_t num_clusters,
@@ -45,13 +76,37 @@ template <typename fptype = double>
   return delta;
 }
 
-// Powered Outer Probabilistic Clustering refinement (Taraba 2017).
-//
-// Given a seeded list of clusters, iteratively reshuffles each instance into
-// the destination cluster that maximally increases J, accepting the move only
-// when J strictly improves. Empty clusters are removed during iteration so
-// that N (used in the probability denominator) reflects the current partition.
-// Terminates when an entire pass over all instances produces no moves.
+/**
+ * @brief Powered Outer Probabilistic Clustering refinement (Taraba 2017).
+ *
+ * Iteratively reshuffles each instance into the cluster that produces the
+ * largest strict increase in the objective J. A move is accepted only when
+ * the combined source-removal and destination-addition delta is strictly
+ * positive (steepest-ascent local search). Empty clusters are removed
+ * during iteration so that the `N` term in the probability denominator
+ * always reflects the current partition size. The loop terminates when
+ * an entire pass over every instance produces no moves.
+ *
+ * The seeded `clusters` argument is consumed in place: the function
+ * mutates it as moves are accepted, and the resulting partition lives
+ * in this list at return time. The returned label vector is a flat
+ * `instance_num -> cluster_index` map produced by walking the final
+ * cluster list.
+ *
+ * @tparam fptype     Floating-point type for the probability arithmetic.
+ *                    See compute_delta() for selection guidance.
+ * @param ds          Source dataset; provides instance values and the
+ *                    dataset-wide positive counts.
+ * @param clusters    Seeded partition. Each cluster's `attribute_counts`
+ *                    must already match its members. Mutated in place.
+ * @param multiplier  The `Cm` hyperparameter (defaults to the paper's 1000).
+ * @param power       The `P` hyperparameter (defaults to the paper's 10).
+ *
+ * @return Vector of size `ds.num_instances()` mapping each instance index
+ *         to its final cluster index in `[0, clusters.size())`. Cluster
+ *         indices are assigned in the order in which the clusters appear
+ *         in `clusters` at return time.
+ */
 template <typename fptype = double>
 [[nodiscard]] std::vector<std::size_t>
 popc(popc::dataset const &ds, std::list<popc::cluster> &clusters,
