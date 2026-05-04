@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
-- Doxygen-style API docstrings on every public class, method, and free function in `include/popc/`, matching the convention used by the sibling C++ libraries (vcp, mRMR). The `popc::detail::bitpacked_kmodes_seed` family in the internal `detail/` namespace is also documented.
+- Doxygen-style API docstrings on every public class, method, and free function in `include/popc/`, matching the convention used by the sibling C++ libraries (vcp, mRMR). The `popc::detail::bitpacked_kmodes_seed` family in the internal `detail/` namespace is also documented. The CLI-internal helpers in `src/popc.cpp` (verbosity_level, message_type, log_message, parse_double, parse_verbosity, run, main) also carry Doxygen briefs.
 - CMake build system replacing custom Makefile (CMake 3.24+, presets for release/debug/sanitize)
 - BSD 3-Clause license replacing MIT
 - `.clang-format` and `.clang-tidy` configuration matching sibling library conventions
