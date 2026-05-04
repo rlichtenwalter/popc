@@ -1,0 +1,31 @@
+Checks: >
+  -*,
+  bugprone-*,
+  -bugprone-easily-swappable-parameters,
+  -bugprone-branch-clone,
+  modernize-*,
+  -modernize-use-trailing-return-type,
+  -modernize-use-nodiscard,
+  -modernize-avoid-c-arrays,
+  -modernize-type-traits,
+  -modernize-concat-nested-namespaces,
+  performance-*,
+  -performance-enum-size,
+  readability-braces-around-statements,
+  readability-container-size-empty,
+  readability-redundant-smartptr-get,
+  misc-*,
+  -misc-use-internal-linkage,
+  -misc-no-recursion,
+  -misc-non-private-member-variables-in-classes,
+  -misc-include-cleaner,
+  -misc-const-correctness,
+  -misc-use-anonymous-namespace,
+
+WarningsAsErrors: '*'
+
+HeaderFilterRegex: 'include/popc/.*\.hpp$'
+
+CheckOptions:
+  - key: readability-braces-around-statements.ShortStatementLines
+    value: 0

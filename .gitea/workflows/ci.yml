@@ -1,0 +1,117 @@
+name: CI
+
+on:
+  push:
+    branches: [develop, main]
+  pull_request:
+    branches: [develop, main]
+
+# Cancel older runs for the same ref when a new push/PR event arrives.
+# Saves CI cycles on rapid re-pushes.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # `preset` selects the configuration from CMakePresets.json; the
+        # `cc`/`cxx` env vars are read by CMake's compiler detection. The
+        # presets are compiler-agnostic, so the same `release`/`debug`
+        # preset is used by both gcc and clang matrix entries.
+        preset: [release, debug]
+        compiler: [gcc, clang]
+        include:
+          - compiler: gcc
+            cc: gcc
+            cxx: g++
+          - compiler: clang
+            cc: clang
+            cxx: clang++
+    env:
+      CC: ${{ matrix.cc }}
+      CXX: ${{ matrix.cxx }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang lld
+
+      - name: Configure
+        run: cmake --preset=${{ matrix.preset }}
+
+      - name: Build
+        run: cmake --build --preset=${{ matrix.preset }}
+
+      - name: Test
+        run: ctest --preset=${{ matrix.preset }}
+
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install uv + pre-commit
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+      - run: uvx --with pre-commit==4.5.1 pre-commit run --all-files --hook-stage pre-commit
+        env:
+          SKIP: no-commit-to-branch
+      - run: uvx --with pre-commit==4.5.1 pre-commit run --all-files --hook-stage pre-push
+        env:
+          SKIP: no-commit-to-branch
+
+  lint:
+    runs-on: ubuntu-latest
+    # CC/CXX pinned to clang so the generated compile_commands.json does
+    # not include GCC-only flags (-Wlogical-op, -Wduplicated-cond) that
+    # clang-tidy cannot parse — the GCC-gated genexes in
+    # POPC_WARNING_FLAGS evaluate to empty when CXX is clang++.
+    env:
+      CC: clang
+      CXX: clang++
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang lld
+          pip install clang-tidy==20.1.0
+
+      - name: Configure (for compile_commands.json)
+        run: cmake --preset=release
+
+      - name: Run clang-tidy
+        # Lint source files only; HeaderFilterRegex in .clang-tidy
+        # propagates diagnostics back to public headers when those
+        # headers are transitively included by a source TU. Passing
+        # headers directly causes clang-tidy to fall back to "running
+        # without flags" (no compile_commands entry exists for headers
+        # alone), which breaks parsing for C++20 syntax.
+        run: clang-tidy -p build/release src/*.cpp test/*.cpp
+
+  sanitize:
+    # Debug build with AddressSanitizer + UndefinedBehaviorSanitizer.
+    # Runs the full test suite so any UB or memory bug instantiated in
+    # test code fails the PR. Halt-on-error is enforced at compile time
+    # via -fno-sanitize-recover=all.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure (Debug + sanitizers)
+        run: cmake --preset=sanitize
+
+      - name: Build
+        run: cmake --build --preset=sanitize
+
+      - name: Test under sanitizers
+        # ASAN_OPTIONS / UBSAN_OPTIONS are set on the sanitize test preset
+        # itself; listing them here would just duplicate the preset.
+        run: ctest --preset=sanitize
