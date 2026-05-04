@@ -34,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Read loop no longer reassigns the dataset on every stream iteration
 - Sanitize preset now runs ASan with `detect_leaks=1`; first-party-only build no longer needs to suppress leaks from uninstrumented system libraries
 - Empty input (zero-instance dataset) no longer dereferences `end()` of an empty assignment vector; CLI exits cleanly with no output
+- Reformat the test_*.cpp files with the project's pinned clang-format v22.1.2; they predated the pre-commit hook install and had drifted slightly from the canonical formatting, which was caught by the CI quality job's `pre-commit run --all-files` step on the first pipeline execution
 
 ## [0.5.0] - 2020-12-07
 
