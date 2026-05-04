@@ -29,6 +29,7 @@
 
 namespace {
 
+/** @brief Logging severity threshold; filters which messages reach stderr. */
 enum verbosity_level : char {
   QUIET = 0,
   WARNING = 1,
@@ -36,6 +37,12 @@ enum verbosity_level : char {
   DEBUG = 3,
 };
 
+/**
+ * @brief Shape selector for log_message().
+ *
+ * `STANDARD` is a one-shot line. `START` opens a timed scope that
+ * `FINISH` closes; the matching `FINISH` reports elapsed seconds.
+ */
 enum message_type : char {
   STANDARD = 0,
   START = 1,
@@ -45,11 +52,13 @@ enum message_type : char {
 char DELIMITER = '\t';
 verbosity_level VERBOSITY = WARNING;
 
+/** @brief Print the one-line usage hint to stderr. */
 void short_usage(char const *program) {
   std::cerr << "Usage: " << program << " [OPTION]... [FILE]\n"
             << "Try '" << program << " --help' for more information.\n";
 }
 
+/** @brief Print the full `--help` usage text to stderr. */
 void usage(char const *program) {
   std::cerr
       << "Usage: " << program << " [OPTION]... [FILE]\n"
@@ -72,6 +81,20 @@ void usage(char const *program) {
       << "  -V, --version             output version information and exit\n";
 }
 
+/**
+ * @brief Emit a structured progress message to stderr.
+ *
+ * Indented by depth using a function-local stack of start times.
+ * `START` pushes a timestamp; the matching `FINISH` pops it and
+ * reports the elapsed wall time. Messages at a verbosity above the
+ * current `VERBOSITY` global are silently dropped.
+ *
+ * @param message   Null-terminated message text.
+ * @param verbosity Minimum `VERBOSITY` at which the message is emitted.
+ * @param mtype     `STANDARD`, `START`, or `FINISH` (see message_type).
+ *
+ * @throws std::logic_error if a `FINISH` is logged with no matching `START`.
+ */
 void log_message(char const *message, verbosity_level verbosity, message_type mtype) {
   using time_type = std::chrono::time_point<std::chrono::high_resolution_clock>;
   static std::stack<time_type, std::list<time_type>> time_stack;
@@ -103,6 +126,17 @@ void log_message(char const *message, verbosity_level verbosity, message_type mt
   }
 }
 
+/**
+ * @brief Strict floating-point parser for command-line numeric arguments.
+ *
+ * Wraps `std::strtod` and rejects partial conversions: the entire
+ * argument must be a valid floating-point literal with no trailing
+ * garbage and no overflow.
+ *
+ * @param arg Null-terminated input string.
+ * @param out On success, receives the parsed value. Unmodified on failure.
+ * @return `true` if `arg` was fully consumed as a valid double.
+ */
 bool parse_double(char const *arg, double &out) {
   char *end = nullptr;
   errno = 0;
@@ -114,6 +148,16 @@ bool parse_double(char const *arg, double &out) {
   return true;
 }
 
+/**
+ * @brief Parse the `--verbosity` argument into a verbosity_level.
+ *
+ * Accepts both numeric (`0..3`) and symbolic (`quiet`, `warning`, `info`,
+ * `debug`) forms. Comparison is exact; unknown values are rejected.
+ *
+ * @param arg Null-terminated input string.
+ * @param out On success, receives the parsed level. Unmodified on failure.
+ * @return `true` if `arg` matched one of the recognized verbosity tokens.
+ */
 bool parse_verbosity(char const *arg, verbosity_level &out) {
   if (std::strcmp(arg, "0") == 0 || std::strcmp(arg, "quiet") == 0) {
     out = QUIET;
@@ -133,6 +177,19 @@ bool parse_verbosity(char const *arg, verbosity_level &out) {
 
 namespace {
 
+/**
+ * @brief CLI entry point separated from `main()` for exception safety.
+ *
+ * Parses options and arguments, reads the dataset, performs either user-
+ * supplied cluster seeding or the bitpacked k-modes seed, runs the POPC
+ * refinement, and writes one cluster index per line to stdout.
+ *
+ * @param argc Argument count from `main()`.
+ * @param argv Argument vector from `main()`.
+ *
+ * @return Process exit code: `0` on success, `1` on usage errors, `2` on
+ *         runtime errors (input parse failure, unreadable files, etc.).
+ */
 int run(int argc, char *argv[]) {
   std::ios_base::sync_with_stdio(false);
 
@@ -323,6 +380,14 @@ int run(int argc, char *argv[]) {
 
 } // namespace
 
+/**
+ * @brief Process entry point.
+ *
+ * Thin wrapper that catches any exception escaping run(), prints it to
+ * stderr, and returns exit code 2. The wrapper is what makes the
+ * separation of `main` from `run` worthwhile: the inner function is free
+ * to use ordinary C++ error handling without a handler at every leaf.
+ */
 int main(int argc, char *argv[]) {
   try {
     return run(argc, argv);

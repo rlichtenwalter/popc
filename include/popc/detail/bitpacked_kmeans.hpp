@@ -14,18 +14,33 @@
 
 namespace popc::detail {
 
-// Bitpacked binary dataset: each instance occupies words_per_instance() 64-bit
-// words, contiguously stored. Padding bits in the trailing word are zero.
-//
-// Constructed from a popc::dataset (which uses std::vector<bool> internally).
-// The bitpacked form lets distance kernels operate on whole words via popcount
-// instead of one bit per branch, which is the entire point of using it for
-// k-means seeding on binary data.
+/**
+ * @brief Bitpacked binary view over a popc::dataset.
+ *
+ * Each instance occupies `words_per_instance()` 64-bit words, contiguously
+ * stored. Padding bits in the trailing word are zero — a guarantee used by
+ * the centroid-recomputation loop in bitpacked_kmodes_seed() to skip
+ * out-of-range bookkeeping.
+ *
+ * Constructed from a `popc::dataset` (whose internal storage is
+ * `std::vector<bool>`). The bitpacked form lets distance kernels operate on
+ * whole 64-bit words via popcount instead of one bit per branch — the
+ * entire point of using it for k-means seeding on binary data.
+ */
 class bitpacked_dataset {
 public:
   using word_type = std::uint64_t;
   static constexpr std::size_t bits_per_word = 64;
 
+  /**
+   * @brief Pack a popc::dataset into 64-bit-word storage.
+   *
+   * Reads bits from the source dataset row-by-row and lays them out little-end
+   * within each word. Padding bits in the trailing word of each instance
+   * (when `num_attributes()` is not a multiple of 64) are zero-initialized.
+   *
+   * @param ds Source binary dataset to pack.
+   */
   explicit bitpacked_dataset(popc::dataset const &ds)
       : num_instances_{ds.num_instances()}, num_attributes_{ds.num_attributes()},
         words_per_instance_{(ds.num_attributes() + bits_per_word - 1) / bits_per_word},
@@ -42,10 +57,21 @@ public:
     }
   }
 
+  /** @brief Return the number of packed instances. */
   [[nodiscard]] std::size_t num_instances() const noexcept { return num_instances_; }
+
+  /** @brief Return the number of attributes per instance. */
   [[nodiscard]] std::size_t num_attributes() const noexcept { return num_attributes_; }
+
+  /** @brief Return the number of 64-bit words used to store one instance. */
   [[nodiscard]] std::size_t words_per_instance() const noexcept { return words_per_instance_; }
 
+  /**
+   * @brief Return a read-only span over one packed instance.
+   *
+   * @param i Zero-based instance index in `[0, num_instances())`.
+   * @return Span of `words_per_instance()` words.
+   */
   [[nodiscard]] std::span<word_type const> instance(std::size_t i) const noexcept {
     return {data_.data() + i * words_per_instance_, words_per_instance_};
   }
@@ -57,8 +83,17 @@ private:
   std::vector<word_type> data_;
 };
 
-// Hamming distance between two bitpacked vectors of the same word length.
-// Compiles to one popcount per 64 features on x86-64 (POPCNT) and ARMv8 (CNT).
+/**
+ * @brief Hamming distance between two bitpacked vectors of equal word length.
+ *
+ * Compiles to one popcount instruction per 64 features on x86-64 (POPCNT)
+ * and ARMv8 (CNT). The two spans must have the same length; the function
+ * does not check.
+ *
+ * @param a First operand.
+ * @param b Second operand. Must have the same size as `a`.
+ * @return Number of bit positions where `a` and `b` differ.
+ */
 [[nodiscard]] inline std::size_t
 hamming_distance(std::span<bitpacked_dataset::word_type const> a,
                  std::span<bitpacked_dataset::word_type const> b) noexcept {
@@ -69,33 +104,47 @@ hamming_distance(std::span<bitpacked_dataset::word_type const> a,
   return dist;
 }
 
-// Bitpacked binary k-modes clustering for POPC seeding.
-//
-// k-modes (a.k.a. binary k-means with majority-vote centroids) is chosen over
-// probabilistic-centroid k-means because:
-//   1. Centroids stay binary, so the assignment kernel is one popcount per word
-//      rather than F floating-point ops per distance.
-//   2. POPC immediately re-partitions whatever seed we hand it; the partition's
-//      exact identity matters less than its arrival cost.
-//
-// Algorithm:
-//   1. Random initial assignment (each instance to a uniformly-chosen cluster).
-//      Matches the C# reference and avoids k-means++'s O(n*k) pre-pass, which
-//      with POPC's k = n/2 default would be quadratic in n by itself.
-//   2. Lloyd's iteration:
-//      a. For each cluster, recompute the centroid: bit j is 1 iff a strict
-//         majority (count > size/2) of cluster members have bit j set.
-//      b. Reassign each instance to its nearest centroid by Hamming distance.
-//      c. Stop when no instance changes assignment, or after max_iterations.
-//
-// With k = n/2 (POPC's default seed count), each Lloyd's iteration is O(n^2 *
-// words_per_instance) — quadratic in n by construction of the algorithm, not
-// of this implementation. Bitpacking gives a ~64x constant-factor speedup over
-// per-bit kernels.
-//
-// Returns a vector of length data.num_instances() with values in [0, k).
-// Empty clusters are tolerated; downstream POPC removes them as instances
-// drain.
+/**
+ * @brief Bitpacked binary k-modes clustering for POPC seeding.
+ *
+ * k-modes (binary k-means with majority-vote centroids) is chosen over
+ * probabilistic-centroid k-means because:
+ *   1. Centroids stay binary, so the assignment kernel is one popcount per
+ *      word rather than F floating-point operations per distance.
+ *   2. POPC immediately re-partitions whatever seed it receives; the seed
+ *      partition's exact identity matters less than its arrival cost.
+ *
+ * Algorithm:
+ *   1. Random initial assignment (each instance to a uniformly-chosen
+ *      cluster). Matches the C# reference and avoids k-means++'s O(n*k)
+ *      pre-pass, which with POPC's `k = n/2` default would be quadratic
+ *      in n by itself.
+ *   2. Lloyd's iteration:
+ *      a. For each cluster, recompute the centroid: bit j is 1 iff a strict
+ *         majority (count > size/2) of cluster members have bit j set.
+ *      b. Reassign each instance to its nearest centroid by Hamming distance.
+ *      c. Stop when no instance changes assignment, or after `max_iterations`.
+ *
+ * With `k = n/2`, each Lloyd's iteration is `O(n^2 * words_per_instance)` —
+ * quadratic in n by construction of the algorithm, not by limitation of
+ * this implementation. Bitpacking yields a roughly 64x constant-factor
+ * speedup over per-bit kernels.
+ *
+ * Empty clusters are tolerated and may emerge from Lloyd's iteration;
+ * downstream POPC removes them as instances drain.
+ *
+ * @param data           Pre-packed binary dataset.
+ * @param k              Requested number of clusters. Clamped to
+ *                       `data.num_instances()` if larger.
+ * @param max_iterations Hard cap on Lloyd's iterations.
+ * @param seed           Seed for the `std::mt19937_64` used for the random
+ *                       initial assignment. Same seed yields the same
+ *                       partition for the same input.
+ *
+ * @return Vector of length `data.num_instances()` mapping each instance
+ *         to its final cluster index in `[0, k)`. Empty when `data` has
+ *         no instances or `k == 0`.
+ */
 [[nodiscard]] inline std::vector<std::size_t> bitpacked_kmodes_seed(bitpacked_dataset const &data,
                                                                     std::size_t k,
                                                                     std::size_t max_iterations,
@@ -208,7 +257,23 @@ hamming_distance(std::span<bitpacked_dataset::word_type const> a,
   return assignments;
 }
 
-// Convenience overload: takes a popc::dataset and bitpacks it inline.
+/**
+ * @brief Convenience overload: pack a popc::dataset and seed in one call.
+ *
+ * Equivalent to constructing a `bitpacked_dataset` from `ds` and calling
+ * the primary `bitpacked_kmodes_seed` overload. Use the primary overload
+ * when you intend to call the seeder more than once on the same data, so
+ * the bitpacking work is paid only once.
+ *
+ * @param ds             Source binary dataset.
+ * @param k              Requested number of clusters.
+ * @param max_iterations Hard cap on Lloyd's iterations. Defaults to 32.
+ * @param seed           PRNG seed. Defaults to a value drawn from
+ *                       `std::random_device`, so calls are non-reproducible
+ *                       unless an explicit seed is supplied.
+ *
+ * @return Cluster-assignment vector; see the primary overload.
+ */
 [[nodiscard]] inline std::vector<std::size_t>
 bitpacked_kmodes_seed(popc::dataset const &ds, std::size_t k, std::size_t max_iterations = 32,
                       std::uint64_t seed = std::random_device{}()) {
