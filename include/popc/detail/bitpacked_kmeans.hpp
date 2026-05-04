@@ -153,6 +153,9 @@ hamming_distance(std::span<bitpacked_dataset::word_type const> a,
         for (std::size_t w = 0; w < wpi; ++w) {
           word_type word = inst[w];
           std::size_t const base = w * bitpacked_dataset::bits_per_word;
+          // Padding bits in the trailing word are guaranteed zero by
+          // bitpacked_dataset's constructor, so no set bit can have
+          // base + b >= f.
           while (word != 0U) {
             auto const b = static_cast<std::size_t>(std::countr_zero(word));
             ++bit_counts[base + b];

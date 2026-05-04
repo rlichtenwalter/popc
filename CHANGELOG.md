@@ -33,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Invalid `-m`/`-p` values now exit non-zero instead of printing a warning and continuing with garbage values
 - Read loop no longer reassigns the dataset on every stream iteration
 - Sanitize preset now runs ASan with `detect_leaks=1`; first-party-only build no longer needs to suppress leaks from uninstrumented system libraries
+- Empty input (zero-instance dataset) no longer dereferences `end()` of an empty assignment vector; CLI exits cleanly with no output
 
 ## [0.5.0] - 2020-12-07
 

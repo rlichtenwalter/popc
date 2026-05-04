@@ -63,25 +63,25 @@ set_tests_properties(cli_help_short PROPERTIES PASS_REGULAR_EXPRESSION "Usage:")
 # File and stdin input paths
 add_test(NAME cli_file_input
     COMMAND ${POPC_CLI} -c "${TEST_DATA_DIR}/clusters.list" "${TEST_DATA_DIR}/data.tsv")
-set_tests_properties(cli_file_input PROPERTIES PASS_REGULAR_EXPRESSION "[0-9]+")
+set_tests_properties(cli_file_input PROPERTIES PASS_REGULAR_EXPRESSION "^[0-9]")
 
 add_test(NAME cli_stdin_input
     COMMAND sh -c "cat '${TEST_DATA_DIR}/data.tsv' | ${POPC_CLI} -c '${TEST_DATA_DIR}/clusters.list'")
-set_tests_properties(cli_stdin_input PROPERTIES PASS_REGULAR_EXPRESSION "[0-9]+")
+set_tests_properties(cli_stdin_input PROPERTIES PASS_REGULAR_EXPRESSION "^[0-9]")
 
 # Custom delimiter
 add_test(NAME cli_delimiter_explicit_tab
     COMMAND ${POPC_CLI} -t "\\t" -c "${TEST_DATA_DIR}/clusters.list" "${TEST_DATA_DIR}/data.tsv")
-set_tests_properties(cli_delimiter_explicit_tab PROPERTIES PASS_REGULAR_EXPRESSION "[0-9]+")
+set_tests_properties(cli_delimiter_explicit_tab PROPERTIES PASS_REGULAR_EXPRESSION "^[0-9]")
 
 # Custom multiplier and power
 add_test(NAME cli_custom_multiplier
     COMMAND ${POPC_CLI} -m 500.0 -c "${TEST_DATA_DIR}/clusters.list" "${TEST_DATA_DIR}/data.tsv")
-set_tests_properties(cli_custom_multiplier PROPERTIES PASS_REGULAR_EXPRESSION "[0-9]+")
+set_tests_properties(cli_custom_multiplier PROPERTIES PASS_REGULAR_EXPRESSION "^[0-9]")
 
 add_test(NAME cli_custom_power
     COMMAND ${POPC_CLI} -p 5.0 -c "${TEST_DATA_DIR}/clusters.list" "${TEST_DATA_DIR}/data.tsv")
-set_tests_properties(cli_custom_power PROPERTIES PASS_REGULAR_EXPRESSION "[0-9]+")
+set_tests_properties(cli_custom_power PROPERTIES PASS_REGULAR_EXPRESSION "^[0-9]")
 
 # Verbosity levels
 foreach(level 0 1 2 3 quiet warning info debug)
@@ -123,6 +123,10 @@ set_tests_properties(cli_bad_data_value PROPERTIES WILL_FAIL true)
 add_test(NAME cli_inconsistent_columns
     COMMAND sh -c "printf 'a\\tb\\tc\\n1\\t0\\n0\\t1\\t1\\n' | ${POPC_CLI}")
 set_tests_properties(cli_inconsistent_columns PROPERTIES WILL_FAIL true)
+
+# Empty input (no header, no rows) must not crash; exit cleanly with no output.
+add_test(NAME cli_empty_input
+    COMMAND sh -c "printf '' | ${POPC_CLI} -v quiet")
 
 # --- Regression: deterministic output for known input ---
 #

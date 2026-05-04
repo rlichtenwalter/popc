@@ -275,6 +275,9 @@ int run(int argc, char *argv[]) {
   // of distinct clusters used (e.g. user-supplied cluster file with sparse
   // numbering). Compact to dense [0, k) so the cluster vector size below is
   // tight and the popc loop's clusters.size() reflects reality.
+  if (assignments.empty()) {
+    return 0;
+  }
   std::size_t actual_num_clusters = 0;
   {
     std::size_t const max_label = *std::ranges::max_element(assignments);

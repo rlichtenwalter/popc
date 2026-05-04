@@ -116,4 +116,4 @@ popc(popc::dataset const &ds, std::list<popc::cluster> &clusters,
 
 } // namespace popc
 
-#endif
+#endif // POPC_POPC_HPP
