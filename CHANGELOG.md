@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
-- `.pre-commit-config.yaml`: add `args: [--fix=lf]` to the `mixed-line-ending` hook so every commit normalises to LF regardless of the file's current majority ending (the bare hook defaults to `--fix=auto`). Resolves `precommit.mixed_line_ending_fix_lf`.
+- Pin the `mixed-line-ending` pre-commit hook to `--fix=lf` so every commit normalises files to LF
 
 ## [1.0.1] - 2026-05-05
 
