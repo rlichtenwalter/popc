@@ -9,18 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
-- `.pre-commit-config.yaml`: add `args: [--fix=lf]` to the `mixed-line-ending` hook so every commit normalises to LF regardless of the file's current majority ending (the bare hook defaults to `--fix=auto`). Resolves `precommit.mixed_line_ending_fix_lf`.
+- Pin the `mixed-line-ending` pre-commit hook to `--fix=lf` so every commit normalises files to LF
 
 ## [1.0.1] - 2026-05-05
 
 ### Added
-- Gitea Actions workflow `.gitea/workflows/mirror-release-to-github.yml` that mirrors Gitea releases to GitHub on every `release: published` event. Closes the gap left by Gitea's push mirror, which only mirrors git refs and not release metadata. Includes a `workflow_dispatch` path with a `tag` input for manual testing/debugging against any existing Gitea release. Idempotent (skip-if-exists). Prepends `> Originally released YYYY-MM-DD.` to the GitHub body only when the original Gitea release date differs from today, so real-time mirrors are unannotated and backfill-style runs are clearly marked.
-- Ignore `.env` and `.env.*` in `.gitignore` so locally-rendered environment files cannot leak into commits, while still permitting a committed `.env.example` template. Closes the `universal.gitignore_env_secrets` standards-check finding.
+- Gitea Actions workflow that mirrors Gitea releases to GitHub, covering the release metadata Gitea's push mirror does not sync
+  - Manual `workflow_dispatch` path with a `tag` input for mirroring an existing release
+- Ignore `.env` and `.env.*` in `.gitignore` while still permitting a committed `.env.example` template
 
 ## [1.0.0] - 2026-05-04
 
 ### Added
-- Doxygen-style API docstrings on every public class, method, and free function in `include/popc/`, matching the convention used by the sibling C++ libraries (vcp, mRMR). The `popc::detail::bitpacked_kmodes_seed` family in the internal `detail/` namespace is also documented. The CLI-internal helpers in `src/popc.cpp` (verbosity_level, message_type, log_message, parse_double, parse_verbosity, run, main) also carry Doxygen briefs.
+- Doxygen-style API docstrings on every public class, method, and free function in `include/popc/`, plus the internal `detail/` namespace and CLI helpers
 - CMake build system replacing custom Makefile (CMake 3.24+, presets for release/debug/sanitize)
 - BSD 3-Clause license replacing MIT
 - `.clang-format` and `.clang-tidy` configuration matching sibling library conventions
@@ -36,10 +37,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Changed
 - `popc::cluster` exposes `const_iterator begin() const` / `end() const` overloads so range-based `for` works on a const cluster
 - Headers moved from `include/` to `include/popc/` subdirectory; consumers now use `#include <popc/popc.hpp>` etc.
-- Drop `-march=native` from the Release build of `popc-cli`; the binary is now portable across x86-64 baselines, so a release artifact built on one machine no longer SIGILLs on a host with a lower ISA. Power users can rebuild with their preferred `-march` flag if they need maximum local performance.
+- Drop `-march=native` from the Release build of `popc-cli`, making the binary portable across x86-64 baselines
 - LICENSE copyright year updated to 2020-2026
 - C++ standard raised from C++14 to C++20 throughout the codebase
-- k-means seeding replaced with a header-only bitpacked binary k-modes implementation (`popc::detail::bitpacked_kmodes_seed`) using `std::popcount` for Hamming distance; eliminates the mlpack and Armadillo system dependencies
+- k-means seeding replaced with a header-only bitpacked binary k-modes implementation, eliminating the mlpack and Armadillo system dependencies
 - `--version` now reports the actual version from the `VERSION` file (was hardcoded as `0.2 (beta)`)
 - Dataset parse errors throw `std::runtime_error` instead of calling `exit(2)`; caught at the CLI boundary and translated to exit code 2
 
@@ -49,11 +50,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Read loop no longer reassigns the dataset on every stream iteration
 - Sanitize preset now runs ASan with `detect_leaks=1`; first-party-only build no longer needs to suppress leaks from uninstrumented system libraries
 - Empty input (zero-instance dataset) no longer dereferences `end()` of an empty assignment vector; CLI exits cleanly with no output
-- Reformat the test_*.cpp files with the project's pinned clang-format v22.1.2; they predated the pre-commit hook install and had drifted slightly from the canonical formatting, which was caught by the CI quality job's `pre-commit run --all-files` step on the first pipeline execution
-- Replace the C-style index loop in `test_cluster.cpp` with a range-based `for` over `std::as_const(c)`, and `std::max_element(begin, end)` with `std::ranges::max_element(range)` in `test_popc.cpp` — both flagged by the CI lint job's clang-tidy `modernize-*` checks (which run only against source TUs, not headers, so they were not caught by the pre-commit hooks)
-- Dataset stream parser now reports the correct line number on malformed input. `instance_num` was declared in the body loop but never incremented, so every error message used to claim "line 2" regardless of which row was actually offending. Also added the missing `+ 2` adjustment on the "invalid character at separator position" error site
-- Bitpacked k-modes majority-vote test rewritten as `count > size - count` (mathematically equivalent to `2 * count > size` but overflow-free on 32-bit `size_t` for cluster sizes above ~2 billion)
-- `dataset::operator<<` casts `std::vector<bool>` proxy reference values through `int` before stream insertion, so output remains correct if the storage type is ever changed
+- Reformat the test_*.cpp files with the project's pinned clang-format v22.1.2
+- Modernize test code flagged by clang-tidy `modernize-*` checks: range-based `for` in `test_cluster.cpp`, `std::ranges::max_element` in `test_popc.cpp`
+- Dataset stream parser now reports the correct line number on malformed input (previously always claimed "line 2")
+- Bitpacked k-modes majority-vote test rewritten to avoid integer overflow for cluster sizes above ~2 billion on 32-bit `size_t`
+- `dataset::operator<<` casts `std::vector<bool>` proxy reference values through `int` before stream insertion
 
 ## [0.5.0] - 2020-12-07
 
