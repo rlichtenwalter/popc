@@ -52,7 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Empty input (zero-instance dataset) no longer dereferences `end()` of an empty assignment vector; CLI exits cleanly with no output
 - Reformat the test_*.cpp files with the project's pinned clang-format v22.1.2
 - Modernize test code flagged by clang-tidy `modernize-*` checks: range-based `for` in `test_cluster.cpp`, `std::ranges::max_element` in `test_popc.cpp`
-- Dataset stream parser now reports the correct line number on malformed input (previously always claimed "line 2")
+- Dataset stream parser now reports correct line numbers in all malformed-input error messages, including the separator-position error site
 - Bitpacked k-modes majority-vote test rewritten to avoid integer overflow for cluster sizes above ~2 billion on 32-bit `size_t`
 - `dataset::operator<<` casts `std::vector<bool>` proxy reference values through `int` before stream insertion
 
