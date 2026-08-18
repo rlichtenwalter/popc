@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Changed
 
 - Pin the `mixed-line-ending` pre-commit hook to `--fix=lf` so every commit normalises files to LF
+- Remove retired develop branch from CI triggers and pre-commit branch guard
 
 ## [1.0.1] - 2026-05-05
 
