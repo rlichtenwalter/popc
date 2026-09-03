@@ -1,9 +1,9 @@
 # popc
 
-A C++20 implementation of **Powered Outer Probabilistic Clustering** (POPC),
-a clustering algorithm for binary feature data introduced by Peter Taraba in
-[Powered Outer Probabilistic Clustering][popc-paper] (WCECS 2017, best paper award).
-The algorithm starts from many candidate clusters and iteratively merges
+A C++20 implementation of **Powered Outer Probabilistic Clustering** (POPC), a
+clustering algorithm for binary feature data introduced by Peter Taraba in
+[Powered Outer Probabilistic Clustering][popc-paper] (WCECS 2017, best paper
+award). The algorithm starts from many candidate clusters and iteratively merges
 them by maximizing a powered-probability objective, converging on the optimal
 number of clusters without requiring it to be specified in advance.
 
@@ -12,22 +12,22 @@ number of clusters without requiring it to be specified in advance.
 For binary feature data with samples `s_j` and features `f_i`, define a
 discounted probability that feature `f_i` belongs to cluster `k`:
 
-```
+```text
 p(cl(f_i) = k) = (c(s_j(f_i)=1, cl(s_j)=k) · C_m + 1) / (c(f_i=1) · C_m + N)
 ```
 
 where `c` is the count function, `N` is the current number of clusters, and
-`C_m` is a multiplying constant (default 1000). The evaluation function
-raises each probability to a power `P` (default 10) before summing:
+`C_m` is a multiplying constant (default 1000). The evaluation function raises
+each probability to a power `P` (default 10) before summing:
 
-```
+```text
 J = Σ_i Σ_k p^P(cl(f_i) = k) ≤ F
 ```
 
-The algorithm seeds an initial partition with `N = samples / 2` clusters,
-then iteratively reshuffles each sample into the destination cluster that
-maximally increases `J`. Empty clusters are dropped during iteration so `N`
-contracts naturally to the data's intrinsic cluster count.
+The algorithm seeds an initial partition with `N = samples / 2` clusters, then
+iteratively reshuffles each sample into the destination cluster that maximally
+increases `J`. Empty clusters are dropped during iteration so `N` contracts
+naturally to the data's intrinsic cluster count.
 
 ## Enhancements over the reference
 
@@ -38,19 +38,20 @@ that accompanies the paper, with several engineering improvements:
   flags. The reference hardcodes 1000 and 10 throughout.
 - **Bitpacked binary k-modes seeding** — seed clusters are built with a
   header-only k-modes implementation that packs each sample into `uint64_t`
-  chunks and uses `std::popcount` for Hamming distance. This is roughly a
-  64× constant-factor speedup over per-bit kernels and avoids any system
-  dependency on mlpack, Armadillo, or BLAS/LAPACK.
-- **Header-only library** — `cluster`, `dataset`, and `popc` are pure
-  C++20 templates, embeddable in any project via `find_package(popc)` or
+  chunks and uses `std::popcount` for Hamming distance. This is roughly a 64×
+  constant-factor speedup over per-bit kernels and avoids any system dependency
+  on mlpack, Armadillo, or BLAS/LAPACK.
+- **Header-only library** — `cluster`, `dataset`, and `popc` are pure C++20
+  templates, embeddable in any project via `find_package(popc)` or
   `add_subdirectory`.
 - **Templated floating-point type** — `popc::popc<float>` and
   `popc::popc<double>` are both available; the reference is hardcoded to
   `double`.
-- **Stream-based I/O** — input is read from any `std::istream`, so files,
-  stdin, named pipes, and process substitution all work uniformly.
+- **Stream-based I/O** — input is read from any `std::istream`, so files, stdin,
+  named pipes, and process substitution all work uniformly.
 - **CI under sanitizers** — every push runs the test suite under
-  AddressSanitizer + UndefinedBehaviorSanitizer with `-fno-sanitize-recover=all`.
+  AddressSanitizer + UndefinedBehaviorSanitizer with
+  `-fno-sanitize-recover=all`.
 
 ## Building
 
@@ -79,7 +80,7 @@ ctest --preset=sanitize
 
 ## Usage
 
-```
+```text
 Usage: popc [OPTION]... [FILE]
 
 Generate POPC cluster assignments from input. Input is read either from
@@ -139,12 +140,12 @@ pkg-config file.
 
 ## References
 
-- Peter Taraba, *Powered Outer Probabilistic Clustering*, Proceedings of the
+- Peter Taraba, _Powered Outer Probabilistic Clustering_, Proceedings of the
   World Congress on Engineering and Computer Science 2017 Vol I (WCECS 2017),
   October 25-27, 2017, San Francisco, USA. ISBN 978-988-14047-5-6.
   [PDF][popc-paper]
-- Peter Taraba, *Clustering for Binary Featured Datasets*, in: Transactions
-  on Engineering Technologies, Springer Singapore, 2019,
+- Peter Taraba, _Clustering for Binary Featured Datasets_, in: Transactions on
+  Engineering Technologies, Springer Singapore, 2019,
   [doi:10.1007/978-981-13-2191-7_10][popc-springer] (extended chapter version).
 - Reference C# implementation: [pepe78/POPC-examples][csharp-ref] (mirror).
 
@@ -155,6 +156,7 @@ BSD 3-Clause. See [LICENSE](LICENSE).
 The POPC algorithm itself is the work of Peter Taraba; this repository is an
 independent C++ implementation by Ryan N. Lichtenwalter.
 
-[popc-paper]: https://www.iaeng.org/publication/WCECS2017/WCECS2017_pp394-398.pdf
+[popc-paper]:
+  https://www.iaeng.org/publication/WCECS2017/WCECS2017_pp394-398.pdf
 [popc-springer]: https://doi.org/10.1007/978-981-13-2191-7_10
 [csharp-ref]: https://github.com/nagornuiai/POPC-examples
