@@ -15,6 +15,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Remove retired develop branch from CI triggers and pre-commit branch guard
 - Converge the markdownlint configs on the fleet canon: MD036 (emphasis-as-heading) is now disabled, and the cli2 `ignores` list is one entry per line so `biome format` accepts it
 
+### Removed
+
+- Remove the unused `.kacl.yml`: nothing invoked kacl, and its structural rules are stricter than the Keep a Changelog spec states
+
 ## [1.0.1] - 2026-05-05
 
 ### Added
