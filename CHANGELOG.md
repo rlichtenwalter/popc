@@ -13,7 +13,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Give the README's three bare fences (two formulas and a usage block) a language
 - Pin the `mixed-line-ending` pre-commit hook to `--fix=lf` so every commit normalises files to LF
 - Remove retired develop branch from CI triggers and pre-commit branch guard
-- Converge the markdownlint configs on the fleet canon: MD036 (emphasis-as-heading) is now disabled, and the cli2 `ignores` list is one entry per line so `biome format` accepts it
 
 ### Removed
 
