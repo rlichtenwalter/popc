@@ -35,7 +35,7 @@ jobs:
       CC: ${{ matrix.cc }}
       CXX: ${{ matrix.cxx }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install dependencies
         run: |
@@ -54,7 +54,7 @@ jobs:
   quality:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install uv + pre-commit
         run: |
           curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -76,7 +76,7 @@ jobs:
       CC: clang
       CXX: clang++
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install dependencies
         run: |
@@ -103,7 +103,7 @@ jobs:
     # via -fno-sanitize-recover=all.
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Configure (Debug + sanitizers)
         run: cmake --preset=sanitize
@@ -129,7 +129,7 @@ jobs:
     name: Secret Scan
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install gitleaks
         run: |
