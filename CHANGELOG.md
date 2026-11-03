@@ -93,9 +93,9 @@ No changes yet.
 - Header-only library (`popc.hpp`, `cluster.hpp`, `dataset.hpp`)
 - Command-line interface supporting file and stdin input, pre-computed k-means cluster seeding, configurable multiplier and power parameters, and verbosity control
 
-[Unreleased]: https://git.lichtenwalter.site/rlichten/popc/compare/v1.2.0...main
-[1.2.0]: https://git.lichtenwalter.site/rlichten/popc/compare/v1.1.0...v1.2.0
-[1.1.0]: https://git.lichtenwalter.site/rlichten/popc/compare/v1.0.1...v1.1.0
-[1.0.1]: https://git.lichtenwalter.site/rlichten/popc/compare/v1.0.0...v1.0.1
-[1.0.0]: https://git.lichtenwalter.site/rlichten/popc/compare/v0.5.0...v1.0.0
-[0.5.0]: https://git.lichtenwalter.site/rlichten/popc/releases/tag/v0.5.0
+[Unreleased]: https://github.com/rlichtenwalter/popc/compare/v1.2.0...main
+[1.2.0]: https://github.com/rlichtenwalter/popc/compare/v1.1.0...v1.2.0
+[1.1.0]: https://github.com/rlichtenwalter/popc/compare/v1.0.1...v1.1.0
+[1.0.1]: https://github.com/rlichtenwalter/popc/compare/v1.0.0...v1.0.1
+[1.0.0]: https://github.com/rlichtenwalter/popc/compare/v0.5.0...v1.0.0
+[0.5.0]: https://github.com/rlichtenwalter/popc/releases/tag/v0.5.0
