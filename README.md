@@ -58,6 +58,10 @@ that accompanies the paper, with several engineering improvements:
 Requires CMake 3.24+ and a C++20 compiler (GCC 12+ or Clang 16+). No system
 libraries needed.
 
+The bundled `CMakePresets.json` needs CMake ≥ 3.25.
+`cmake --workflow --preset ci` configures, builds and tests the release build in
+one command.
+
 ```bash
 cmake --preset=release
 cmake --build --preset=release
