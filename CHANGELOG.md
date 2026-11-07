@@ -8,6 +8,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 No changes yet.
 
+## [1.2.1] - 2026-11-07
+
+### Added
+
+- CI exercises the plain build, install and find_package() flow on CMake 3.24.0.
+
+### Changed
+
+- Add a `ci` CMake workflow preset; presets now need CMake 3.25.
+- Bump actions/checkout to v7
+- Bump pre-commit hook markdownlint-cli2 to v0.24.0
+- Bump pre-commit hook mirrors-clang-format to v23
+- Bump pre-commit hook pre-commit-hooks to v6
+- Bump pre-commit hooks
+- Install CI tools from PyPI directly; link changelog to GitHub
+- Pin actions/checkout to a commit digest
+- Switch the changelog to towncrier fragments
+
+### Fixed
+
+- Refresh the CHANGELOG version comparison links
+
 ## [1.2.0] - 2026-09-08
 
 ### Added
@@ -93,7 +115,8 @@ No changes yet.
 - Header-only library (`popc.hpp`, `cluster.hpp`, `dataset.hpp`)
 - Command-line interface supporting file and stdin input, pre-computed k-means cluster seeding, configurable multiplier and power parameters, and verbosity control
 
-[Unreleased]: https://github.com/rlichtenwalter/popc/compare/v1.2.0...main
+[Unreleased]: https://github.com/rlichtenwalter/popc/compare/v1.2.1...main
+[1.2.1]: https://github.com/rlichtenwalter/popc/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/rlichtenwalter/popc/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/rlichtenwalter/popc/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/rlichtenwalter/popc/compare/v1.0.0...v1.0.1
