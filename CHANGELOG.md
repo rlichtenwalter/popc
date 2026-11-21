@@ -8,6 +8,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 No changes yet.
 
+## [1.2.2] - 2026-11-20
+
+### Changed
+
+- Bump clang-format pre-commit hook 23.1.3 → 23.1.5
+- Bump pre-commit hooks: prettier 3.9.10 → 3.10.1, markdownlint-cli2 0.24.0 → 0.24.1
+- Keep changelog fragments on one line under Prettier by setting proseWrap never for changelog.d.
+- Run the cmake, clang, lld and Boost CI jobs on the cpp runner label (the ci-runner-image-cpp image) instead of installing distro packages at job time.
+- Stop Prettier from rewrapping changelog fragments
+
 ## [1.2.1] - 2026-11-07
 
 ### Added
@@ -115,7 +125,8 @@ No changes yet.
 - Header-only library (`popc.hpp`, `cluster.hpp`, `dataset.hpp`)
 - Command-line interface supporting file and stdin input, pre-computed k-means cluster seeding, configurable multiplier and power parameters, and verbosity control
 
-[Unreleased]: https://github.com/rlichtenwalter/popc/compare/v1.2.1...main
+[Unreleased]: https://github.com/rlichtenwalter/popc/compare/v1.2.2...main
+[1.2.2]: https://github.com/rlichtenwalter/popc/compare/v1.2.1...v1.2.2
 [1.2.1]: https://github.com/rlichtenwalter/popc/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/rlichtenwalter/popc/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/rlichtenwalter/popc/compare/v1.0.1...v1.1.0
