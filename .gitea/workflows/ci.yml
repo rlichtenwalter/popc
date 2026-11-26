@@ -106,7 +106,7 @@ jobs:
           ./build/install-test/popc_install_consumer
 
   quality:
-    runs-on: ubuntu-latest
+    runs-on: base
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - run: uvx --with pre-commit==4.7.0 pre-commit run --all-files --hook-stage pre-commit
@@ -174,7 +174,7 @@ jobs:
   # ==========================================================================
   secret-scan:
     name: Secret Scan
-    runs-on: ubuntu-latest
+    runs-on: base
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
